@@ -12,6 +12,7 @@ import MembersPage from './pages/MembersPage';
 import GalleryPage from './pages/GalleryPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
+import WelcomePage from './pages/WelcomePage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -24,6 +25,7 @@ function App() {
             <Routes>
               {/* Auth routes without layout */}
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/welcome" element={<WelcomePage />} />
 
               {/* Main routes with layout */}
               <Route element={<Layout />}>

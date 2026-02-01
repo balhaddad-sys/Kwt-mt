@@ -27,7 +27,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+  // Always redirect to welcome page after login
+  const redirectTo = '/welcome';
 
   const loginForm = useForm<LoginFormData>();
   const signUpForm = useForm<SignUpFormData>();
@@ -36,7 +37,7 @@ export default function LoginPage() {
     try {
       setError(null);
       await signIn(data.email, data.password);
-      navigate(from, { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (err: unknown) {
       const error = err as { code?: string };
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
@@ -56,7 +57,7 @@ export default function LoginPage() {
     try {
       setError(null);
       await signUp(data.email, data.password, data.displayName);
-      navigate(from, { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (err: unknown) {
       const error = err as { code?: string };
       if (error.code === 'auth/email-already-in-use') {
@@ -73,7 +74,7 @@ export default function LoginPage() {
     try {
       setError(null);
       await signInWithGoogle();
-      navigate(from, { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch {
       setError('Failed to sign in with Google. Please try again.');
     }
