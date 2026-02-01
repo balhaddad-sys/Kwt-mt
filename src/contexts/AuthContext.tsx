@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { User } from '../types';
 
@@ -34,49 +34,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeProfile: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
 
+      // Clean up previous profile listener
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
+
       if (user) {
-        // Fetch user profile from Firestore
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setUserProfile(userDoc.data() as User);
-          } else {
-            // Create user profile if doesn't exist
-            const newProfile: User = {
+        // Set up real-time listener for user profile
+        const userDocRef = doc(db, 'users', user.uid);
+
+        unsubscribeProfile = onSnapshot(
+          userDocRef,
+          async (snapshot) => {
+            if (snapshot.exists()) {
+              setUserProfile(snapshot.data() as User);
+            } else {
+              // Create user profile if doesn't exist
+              const newProfile: User = {
+                id: user.uid,
+                email: user.email || '',
+                displayName: user.displayName || 'User',
+                photoURL: user.photoURL || undefined,
+                role: 'member',
+                createdAt: new Date(),
+                lastLogin: new Date(),
+              };
+              await setDoc(userDocRef, newProfile);
+              setUserProfile(newProfile);
+            }
+            setLoading(false);
+          },
+          (error) => {
+            console.error('Error listening to user profile:', error);
+            // Set a basic profile without Firestore
+            setUserProfile({
               id: user.uid,
               email: user.email || '',
               displayName: user.displayName || 'User',
               photoURL: user.photoURL || undefined,
               role: 'member',
               createdAt: new Date(),
-              lastLogin: new Date(),
-            };
-            await setDoc(doc(db, 'users', user.uid), newProfile);
-            setUserProfile(newProfile);
+            });
+            setLoading(false);
           }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          // Set a basic profile without Firestore
-          setUserProfile({
-            id: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || 'User',
-            photoURL: user.photoURL || undefined,
-            role: 'member',
-            createdAt: new Date(),
-          });
-        }
+        );
       } else {
         setUserProfile(null);
+        setLoading(false);
       }
-
-      setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
