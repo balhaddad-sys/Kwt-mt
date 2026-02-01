@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import Layout from './components/layout/Layout';
 
 // Pages
@@ -17,28 +18,30 @@ import NotFoundPage from './pages/NotFoundPage';
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Auth routes without layout */}
-            <Route path="/login" element={<LoginPage />} />
+      <LanguageProvider>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              {/* Auth routes without layout */}
+              <Route path="/login" element={<LoginPage />} />
 
-            {/* Main routes with layout */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/events" element={<EventsPage />} />
-              <Route path="/members" element={<MembersPage />} />
-              <Route path="/gallery" element={<GalleryPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
+              {/* Main routes with layout */}
+              <Route element={<Layout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/members" element={<MembersPage />} />
+                <Route path="/gallery" element={<GalleryPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
 
-            {/* Admin routes */}
-            <Route path="/admin/*" element={<AdminPage />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
+              {/* Admin routes */}
+              <Route path="/admin/*" element={<AdminPage />} />
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }
