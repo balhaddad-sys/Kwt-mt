@@ -18,6 +18,7 @@ import Section from '../components/ui/Section';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import EventCard from '../components/common/EventCard';
+import { EditableText } from '../components/editable';
 import { mockEvents } from '../data/mockData';
 import { EventCategory } from '../types';
 
@@ -115,11 +116,23 @@ export default function EventsPage() {
               Events
             </span>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
-              Community Events
+              <EditableText
+                value="Community Events"
+                collection="content"
+                documentId="events-hero"
+                field="title"
+                as="span"
+              />
             </h1>
             <p className="text-lg text-primary-100">
-              Discover our upcoming gatherings, cultural celebrations, and networking
-              opportunities. Join us and be part of something special.
+              <EditableText
+                value="Discover our upcoming gatherings, cultural celebrations, and networking opportunities. Join us and be part of something special."
+                collection="content"
+                documentId="events-hero"
+                field="description"
+                as="span"
+                multiline
+              />
             </p>
           </motion.div>
         </div>

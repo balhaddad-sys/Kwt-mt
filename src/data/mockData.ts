@@ -417,7 +417,8 @@ export const navigationItems = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Events', href: '/events' },
-  { label: 'Members', href: '/members' },
+  { label: 'Team', href: '/team' },
+  { label: 'Community', href: '/community' },
   { label: 'Gallery', href: '/gallery' },
   { label: 'Contact', href: '/contact' },
 ];
