@@ -181,3 +181,115 @@ export interface NavItem {
 
 // Theme
 export type Theme = 'light' | 'dark' | 'system';
+
+// Admin Theme Colors
+export interface ThemeColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+  gold: string;
+  background: string;
+  text: string;
+  textLight: string;
+}
+
+export const defaultThemeColors: ThemeColors = {
+  primary: '#1a3d52',
+  secondary: '#00a89c',
+  accent: '#c41e3a',
+  gold: '#d4a851',
+  background: '#f5f5f5',
+  text: '#1a1a1a',
+  textLight: '#ffffff',
+};
+
+// Admin Role Types
+export type AdminRole = 'super_admin' | 'editor' | 'event_manager' | 'media_manager';
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role: AdminRole;
+  photoURL?: string;
+  invitedBy?: string;
+  invitedAt?: Date;
+  createdAt: Date;
+  lastLogin?: Date;
+  isActive: boolean;
+}
+
+// Admin Audit Log
+export interface AuditLogEntry {
+  id: string;
+  adminId: string;
+  adminEmail: string;
+  action: string;
+  details: string;
+  resourceType: 'event' | 'member' | 'content' | 'media' | 'team' | 'theme' | 'settings' | 'admin';
+  resourceId?: string;
+  timestamp: Date;
+}
+
+// Content Management
+export interface PageContent {
+  id: string;
+  pageId: string;
+  sectionId: string;
+  content: {
+    en: string;
+    ar: string;
+  };
+  lastUpdated: Date;
+  updatedBy: string;
+}
+
+// Media Management
+export interface MediaItem {
+  id: string;
+  url: string;
+  thumbnailUrl?: string;
+  filename: string;
+  category: 'events' | 'team' | 'gallery' | 'hero' | 'general';
+  mimeType: string;
+  size: number;
+  width?: number;
+  height?: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+  alt?: string;
+  caption?: string;
+}
+
+// Event Categories with Colors
+export const eventCategoryColors: Record<EventCategory, string> = {
+  sports: '#00a89c',
+  cultural: '#8b5cf6',
+  academic: '#3b82f6',
+  social: '#f59e0b',
+  workshop: '#8b5cf6',
+  networking: '#10b981',
+  celebration: '#ec4899',
+  other: '#6b7280',
+};
+
+// Site Settings
+export interface SiteSettings {
+  siteName: string;
+  siteDescription: {
+    en: string;
+    ar: string;
+  };
+  contactEmail: string;
+  contactPhone?: string;
+  address?: string;
+  socialLinks: {
+    instagram?: string;
+    twitter?: string;
+    facebook?: string;
+    linkedin?: string;
+    youtube?: string;
+  };
+  foundedYear: number;
+  memberCount: number;
+}
