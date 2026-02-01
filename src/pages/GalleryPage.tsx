@@ -1,14 +1,18 @@
 import { useState, useMemo } from 'react';
-import { X, ChevronLeft, ChevronRight, Search, Image, Heart, Download } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Search, Image, Heart, Download, Plus, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Section from '../components/ui/Section';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import { EditableText } from '../components/editable';
+import { useEdit } from '../contexts/EditContext';
 import { mockGalleryImages, mockAlbums } from '../data/mockData';
 import { GalleryImage } from '../types';
 
 type ViewMode = 'all' | 'albums';
 
 export default function GalleryPage() {
+  const { isEditMode } = useEdit();
   const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
@@ -73,11 +77,23 @@ export default function GalleryPage() {
               Gallery
             </span>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
-              Photo Gallery
+              <EditableText
+                value="Photo Gallery"
+                collection="content"
+                documentId="gallery-hero"
+                field="title"
+                as="span"
+              />
             </h1>
             <p className="text-lg text-primary-100">
-              Relive the moments from our events, gatherings, and celebrations.
-              Browse through our collection of memories.
+              <EditableText
+                value="Relive the moments from our events, gatherings, and celebrations. Browse through our collection of memories."
+                collection="content"
+                documentId="gallery-hero"
+                field="description"
+                as="span"
+                multiline
+              />
             </p>
           </motion.div>
         </div>

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Section from '../components/ui/Section';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { EditableText } from '../components/editable';
 
 interface ContactFormData {
   name: string;
@@ -83,11 +84,23 @@ export default function ContactPage() {
               Get in Touch
             </span>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
-              Contact Us
+              <EditableText
+                value="Contact Us"
+                collection="content"
+                documentId="contact-hero"
+                field="title"
+                as="span"
+              />
             </h1>
             <p className="text-lg text-primary-100">
-              Have questions? Want to join our community? We'd love to hear from
-              you. Reach out to us and we'll respond as soon as possible.
+              <EditableText
+                value="Have questions? Want to join our community? We'd love to hear from you. Reach out to us and we'll respond as soon as possible."
+                collection="content"
+                documentId="contact-hero"
+                field="description"
+                as="span"
+                multiline
+              />
             </p>
           </motion.div>
         </div>
