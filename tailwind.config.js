@@ -58,18 +58,9 @@ export default {
           800: '#4e0c17',
           900: '#27060c',
         },
-        gold: {
-          50: '#fcf8eb',
-          100: '#f9f1d7',
-          200: '#f3e3af',
-          300: '#edd587',
-          400: '#e7c75f',
-          500: '#d4a851', // Gold - premium accent
-          600: '#aa8641',
-          700: '#7f6531',
-          800: '#554320',
-          900: '#2a2210',
-        },
+        gold: '#d4a851', // Gold - premium accent (direct reference for text-gold)
+        'gold-light': '#e7c75f',
+        'gold-dark': '#aa8641',
         neutral: {
           50: '#fafafa',
           100: '#f5f5f5',
