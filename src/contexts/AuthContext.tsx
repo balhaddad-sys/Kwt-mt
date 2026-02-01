@@ -10,7 +10,7 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { User } from '../types';
 
@@ -28,16 +28,63 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Auto-setup first user as admin
+async function setupAsAdmin(user: FirebaseUser): Promise<void> {
+  try {
+    const adminDocRef = doc(db, 'admin', 'admins', 'users', user.uid);
+    const adminDoc = await getDoc(adminDocRef);
+
+    if (!adminDoc.exists()) {
+      // Make this user a super admin
+      await setDoc(adminDocRef, {
+        email: user.email,
+        displayName: user.displayName || user.email?.split('@')[0] || 'Admin',
+        role: 'super_admin',
+        photoURL: user.photoURL || null,
+        isActive: true,
+        createdAt: Timestamp.now(),
+        lastLogin: Timestamp.now(),
+      });
+      console.log('User set up as super admin:', user.email);
+    } else {
+      // Update last login
+      await setDoc(adminDocRef, { lastLogin: Timestamp.now() }, { merge: true });
+    }
+  } catch (error) {
+    console.error('Error setting up admin:', error);
+  }
+}
+
+// Check if user is admin
+async function checkAdminStatus(userId: string): Promise<boolean> {
+  try {
+    const adminDocRef = doc(db, 'admin', 'admins', 'users', userId);
+    const adminDoc = await getDoc(adminDocRef);
+    return adminDoc.exists() && adminDoc.data()?.isActive === true;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
 
       if (user) {
+        // Auto-setup user as admin (for first users)
+        await setupAsAdmin(user);
+
+        // Check admin status
+        const adminStatus = await checkAdminStatus(user.uid);
+        setIsAdmin(adminStatus);
+
         // Fetch user profile from Firestore
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -50,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: user.email || '',
               displayName: user.displayName || 'User',
               photoURL: user.photoURL || undefined,
-              role: 'member',
+              role: adminStatus ? 'admin' : 'member',
               createdAt: new Date(),
               lastLogin: new Date(),
             };
@@ -65,12 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: user.email || '',
             displayName: user.displayName || 'User',
             photoURL: user.photoURL || undefined,
-            role: 'member',
+            role: adminStatus ? 'admin' : 'member',
             createdAt: new Date(),
           });
         }
       } else {
         setUserProfile(null);
+        setIsAdmin(false);
       }
 
       setLoading(false);
@@ -111,13 +159,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await firebaseSignOut(auth);
     setUserProfile(null);
+    setIsAdmin(false);
   };
 
   const resetPassword = async (email: string) => {
     await sendPasswordResetEmail(auth, email);
   };
-
-  const isAdmin = userProfile?.role === 'admin';
 
   const value = {
     currentUser,
