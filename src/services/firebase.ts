@@ -5,15 +5,16 @@ import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, Analytics, isSupported } from 'firebase/analytics';
 
 // Firebase configuration
-// Replace these values with your Firebase project config
+// KWT-MT (Kuwaiti Student Association in Malta)
+// Project ID: kwt-mt
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'your-api-key',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'your-project.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'your-project-id',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'your-project.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'your-messaging-sender-id',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'your-app-id',
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-XXXXXXXXXX',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyAMiL3f5uie0io5hsHBiHhHIq2q5Vv-WbA',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'kwt-mt.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'kwt-mt',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'kwt-mt.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '253960446965',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:253960446965:web:66836ed17301968f6436bc',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-HL4CMV5MKC',
 };
 
 // Initialize Firebase
