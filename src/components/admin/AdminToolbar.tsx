@@ -10,8 +10,9 @@ import {
   CheckCircle,
   AlertCircle,
   X,
-  ChevronUp,
-  ChevronDown,
+  Settings,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEdit } from '../../contexts/EditContext';
@@ -30,7 +31,7 @@ export default function AdminToolbar() {
   } = useEdit();
 
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
 
@@ -40,6 +41,7 @@ export default function AdminToolbar() {
     try {
       await publishChanges();
       setShowSuccess(true);
+      setIsExpanded(false);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       setShowError(error instanceof Error ? error.message : 'Failed to publish changes');
@@ -50,143 +52,212 @@ export default function AdminToolbar() {
   const handleDiscard = () => {
     if (hasChanges && confirm('Are you sure you want to discard all pending changes?')) {
       discardChanges();
+      setIsExpanded(false);
+    }
+  };
+
+  const handleToggleEditMode = () => {
+    toggleEditMode();
+    if (!isEditMode) {
+      // When entering edit mode, close the menu
+      setIsExpanded(false);
     }
   };
 
   return (
     <>
-      {/* Floating Toolbar */}
-      <AnimatePresence>
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"
-        >
-          {/* Success/Error Messages */}
-          <AnimatePresence>
-            {showSuccess && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="absolute -top-16 left-1/2 -translate-x-1/2 whitespace-nowrap"
-              >
-                <div className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
-                  <CheckCircle size={18} />
-                  <span>Changes published successfully!</span>
-                </div>
-              </motion.div>
-            )}
-
-            {showError && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="absolute -top-16 left-1/2 -translate-x-1/2 whitespace-nowrap"
-              >
-                <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg">
-                  <AlertCircle size={18} />
-                  <span>{showError}</span>
-                  <button onClick={() => setShowError(null)} className="hover:opacity-80">
-                    <X size={16} />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Main Toolbar */}
-          <motion.div
-            layout
-            className="bg-gray-900 dark:bg-gray-800 text-white rounded-2xl shadow-2xl overflow-hidden"
-          >
-            {/* Minimize/Expand Button */}
-            <button
-              onClick={() => setIsMinimized(!isMinimized)}
-              className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-gray-900 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors"
+      {/* Toast Messages */}
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              className="pointer-events-auto"
             >
-              {isMinimized ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
+              <div className="flex items-center gap-2 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg">
+                <CheckCircle size={20} />
+                <span className="font-medium">Changes published!</span>
+              </div>
+            </motion.div>
+          )}
 
-            <AnimatePresence mode="wait">
-              {!isMinimized ? (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="flex items-center gap-1 p-2"
-                >
-                  {/* Edit Mode Toggle */}
-                  <ToolbarButton
-                    onClick={toggleEditMode}
-                    active={isEditMode}
-                    icon={isEditMode ? <PencilOff size={18} /> : <Pencil size={18} />}
-                    label={isEditMode ? 'Exit Edit Mode' : 'Edit Mode'}
-                    tooltip={isEditMode ? 'Exit edit mode' : 'Enter edit mode'}
-                  />
+          {showError && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.9 }}
+              className="pointer-events-auto"
+            >
+              <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg">
+                <AlertCircle size={20} />
+                <span className="font-medium">{showError}</span>
+                <button onClick={() => setShowError(null)} className="ml-2 hover:opacity-80">
+                  <X size={18} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
-                  {/* Divider */}
-                  <div className="w-px h-8 bg-gray-700 mx-1" />
+      {/* Edit Mode Indicator Banner */}
+      <AnimatePresence>
+        {isEditMode && (
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -50, opacity: 0 }}
+            className="fixed top-16 md:top-20 left-0 right-0 z-40 bg-gold text-white py-2 px-4 text-center text-sm font-medium shadow-md"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Pencil size={16} />
+              <span>Edit Mode Active</span>
+              <span className="hidden sm:inline">- Click on any text or image to edit</span>
+              {hasChanges && (
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs ml-2">
+                  {changesCount} pending
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-                  {/* Theme Editor */}
-                  <ToolbarButton
-                    onClick={() => setIsThemeModalOpen(true)}
-                    icon={<Palette size={18} />}
-                    label="Theme"
-                    tooltip="Edit theme colors"
-                  />
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsExpanded(false)}
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
 
-                  {/* Divider */}
-                  <div className="w-px h-8 bg-gray-700 mx-1" />
+      {/* Floating Admin Panel */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="absolute bottom-16 right-0 mb-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
+            >
+              {/* Header */}
+              <div className="bg-gray-100 dark:bg-gray-900 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Admin Controls</h3>
+              </div>
 
-                  {/* Publish Changes */}
-                  <ToolbarButton
+              {/* Menu Items */}
+              <div className="p-2 space-y-1">
+                {/* Edit Mode Toggle */}
+                <MenuItem
+                  onClick={handleToggleEditMode}
+                  icon={isEditMode ? <EyeOff size={20} /> : <Eye size={20} />}
+                  label={isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                  description={isEditMode ? 'Stop editing content' : 'Edit text and images'}
+                  active={isEditMode}
+                />
+
+                {/* Theme Editor */}
+                <MenuItem
+                  onClick={() => {
+                    setIsThemeModalOpen(true);
+                    setIsExpanded(false);
+                  }}
+                  icon={<Palette size={20} />}
+                  label="Theme Colors"
+                  description="Customize site colors"
+                />
+
+                {/* Divider */}
+                {hasChanges && <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />}
+
+                {/* Publish */}
+                {hasChanges && (
+                  <MenuItem
                     onClick={handlePublish}
-                    disabled={!hasChanges || isPublishing}
+                    disabled={isPublishing}
                     icon={
                       isPublishing ? (
-                        <Loader2 size={18} className="animate-spin" />
+                        <Loader2 size={20} className="animate-spin" />
                       ) : (
-                        <Upload size={18} />
+                        <Upload size={20} />
                       )
                     }
-                    label="Publish"
-                    tooltip={hasChanges ? `Publish ${changesCount} change(s)` : 'No changes to publish'}
-                    badge={hasChanges ? changesCount : undefined}
+                    label={`Publish Changes`}
+                    description={`${changesCount} change${changesCount > 1 ? 's' : ''} pending`}
                     variant="primary"
                   />
+                )}
 
-                  {/* Discard Changes */}
-                  <ToolbarButton
+                {/* Discard */}
+                {hasChanges && (
+                  <MenuItem
                     onClick={handleDiscard}
-                    disabled={!hasChanges}
-                    icon={<Trash2 size={18} />}
-                    label="Discard"
-                    tooltip="Discard all changes"
+                    icon={<Trash2 size={20} />}
+                    label="Discard Changes"
+                    description="Remove all pending changes"
                     variant="danger"
                   />
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="px-4 py-2 flex items-center gap-2"
-                >
-                  <span className="text-sm text-gray-400">Admin Toolbar</span>
-                  {hasChanges && (
-                    <span className="bg-gold text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                      {changesCount}
-                    </span>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* FAB Button */}
+        <motion.button
+          onClick={() => setIsExpanded(!isExpanded)}
+          whileTap={{ scale: 0.95 }}
+          className={`relative w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+            isEditMode
+              ? 'bg-gold text-white'
+              : isExpanded
+              ? 'bg-gray-800 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700'
+          }`}
+        >
+          <motion.div
+            animate={{ rotate: isExpanded ? 45 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isExpanded ? (
+              <X size={24} />
+            ) : isEditMode ? (
+              <Pencil size={24} />
+            ) : (
+              <Settings size={24} />
+            )}
           </motion.div>
-        </motion.div>
-      </AnimatePresence>
+
+          {/* Badge for pending changes */}
+          {hasChanges && !isExpanded && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md"
+            >
+              {changesCount > 9 ? '9+' : changesCount}
+            </motion.span>
+          )}
+
+          {/* Edit mode indicator ring */}
+          {isEditMode && !isExpanded && (
+            <motion.span
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 rounded-full border-2 border-gold"
+            />
+          )}
+        </motion.button>
+      </div>
 
       {/* Theme Editor Modal */}
       <ThemeEditorModal
@@ -197,54 +268,52 @@ export default function AdminToolbar() {
   );
 }
 
-interface ToolbarButtonProps {
+interface MenuItemProps {
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
-  tooltip?: string;
+  description?: string;
   active?: boolean;
   disabled?: boolean;
-  badge?: number;
   variant?: 'default' | 'primary' | 'danger';
 }
 
-function ToolbarButton({
+function MenuItem({
   onClick,
   icon,
   label,
-  tooltip,
+  description,
   active,
   disabled,
-  badge,
   variant = 'default',
-}: ToolbarButtonProps) {
+}: MenuItemProps) {
   const variantStyles = {
     default: active
-      ? 'bg-gray-700 text-white'
-      : 'hover:bg-gray-700 text-gray-300 hover:text-white',
+      ? 'bg-gold/10 text-gold border-gold/20'
+      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200',
     primary: disabled
-      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-      : 'bg-gold hover:bg-gold/90 text-white',
+      ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+      : 'bg-gold/10 hover:bg-gold/20 text-gold',
     danger: disabled
-      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-      : 'hover:bg-red-500/20 text-red-400 hover:text-red-300',
+      ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+      : 'hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500',
   };
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      title={tooltip}
-      className={`relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 ${variantStyles[variant]}`}
+      className={`w-full flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left ${variantStyles[variant]}`}
     >
-      {icon}
-      <span className="text-sm font-medium hidden sm:inline">{label}</span>
-
-      {/* Badge */}
-      {badge !== undefined && badge > 0 && (
-        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-          {badge > 9 ? '9+' : badge}
-        </span>
+      <span className="mt-0.5 shrink-0">{icon}</span>
+      <div className="min-w-0">
+        <div className="font-medium text-sm">{label}</div>
+        {description && (
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</div>
+        )}
+      </div>
+      {active && (
+        <span className="ml-auto shrink-0 w-2 h-2 bg-gold rounded-full mt-2" />
       )}
     </button>
   );
