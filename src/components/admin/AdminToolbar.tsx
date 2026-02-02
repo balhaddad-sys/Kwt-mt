@@ -1,30 +1,148 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
-import {
-  Pencil,
-  Palette,
-  Upload,
-  Trash2,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
-  X,
-  Settings,
-  Eye,
-  EyeOff,
-  Image,
-  Users,
-  Calendar,
-  FileText,
-  LayoutGrid,
-  ChevronUp,
-  Home,
-  Sparkles,
-} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEdit } from '../../contexts/EditContext';
 import ThemeEditorModal from './ThemeEditorModal';
+
+// SVG Icon Components
+const Icons = {
+  Pencil: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <path d="m15 5 4 4" />
+    </svg>
+  ),
+  Eye: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  EyeOff: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      <line x1="2" x2="22" y1="2" y2="22" />
+    </svg>
+  ),
+  Palette: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z" />
+    </svg>
+  ),
+  Upload: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" x2="12" y1="3" y2="15" />
+    </svg>
+  ),
+  Trash: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M3 6h18" />
+      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  ),
+  Loader: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  ),
+  Check: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
+  Alert: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" x2="12" y1="8" y2="12" />
+      <line x1="12" x2="12.01" y1="16" y2="16" />
+    </svg>
+  ),
+  X: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  ),
+  Settings: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  Image: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    </svg>
+  ),
+  Users: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  Calendar: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d="M3 10h18" />
+    </svg>
+  ),
+  FileText: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 9H8" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
+    </svg>
+  ),
+  Grid: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect width="7" height="7" x="3" y="3" rx="1" />
+      <rect width="7" height="7" x="14" y="3" rx="1" />
+      <rect width="7" height="7" x="14" y="14" rx="1" />
+      <rect width="7" height="7" x="3" y="14" rx="1" />
+    </svg>
+  ),
+  ChevronUp: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="m18 15-6-6-6 6" />
+    </svg>
+  ),
+  Home: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  ),
+  Sparkles: ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+      <path d="M5 3v4" />
+      <path d="M19 17v4" />
+      <path d="M3 5h4" />
+      <path d="M17 19h4" />
+    </svg>
+  ),
+};
 
 export default function AdminToolbar() {
   const { isAdmin } = useAuth();
@@ -66,11 +184,11 @@ export default function AdminToolbar() {
   const isOnAdminPage = location.pathname.startsWith('/admin');
 
   const quickLinks = [
-    { href: '/admin', icon: LayoutGrid, label: 'Dashboard', description: 'Admin overview' },
-    { href: '/admin?tab=events', icon: Calendar, label: 'Events', description: 'Manage events' },
-    { href: '/admin?tab=team', icon: Users, label: 'Team', description: 'Edit team members' },
-    { href: '/admin?tab=media', icon: Image, label: 'Media', description: 'Upload images' },
-    { href: '/admin?tab=content', icon: FileText, label: 'Content', description: 'Edit page content' },
+    { href: '/admin', icon: Icons.Grid, label: 'Dashboard', description: 'Admin overview' },
+    { href: '/admin?tab=events', icon: Icons.Calendar, label: 'Events', description: 'Manage events' },
+    { href: '/admin?tab=team', icon: Icons.Users, label: 'Team', description: 'Edit team members' },
+    { href: '/admin?tab=media', icon: Icons.Image, label: 'Media', description: 'Upload images' },
+    { href: '/admin?tab=content', icon: Icons.FileText, label: 'Content', description: 'Edit page content' },
   ];
 
   return (
@@ -86,7 +204,7 @@ export default function AdminToolbar() {
               className="pointer-events-auto"
             >
               <div className="flex items-center gap-2 bg-green-500 text-white px-4 py-3 rounded-xl shadow-lg">
-                <CheckCircle size={20} />
+                <Icons.Check size={20} />
                 <span className="font-medium">Changes published!</span>
               </div>
             </motion.div>
@@ -100,10 +218,10 @@ export default function AdminToolbar() {
               className="pointer-events-auto"
             >
               <div className="flex items-center gap-2 bg-red-500 text-white px-4 py-3 rounded-xl shadow-lg max-w-sm">
-                <AlertCircle size={20} className="shrink-0" />
+                <Icons.Alert size={20} className="shrink-0" />
                 <span className="font-medium text-sm">{showError}</span>
                 <button onClick={() => setShowError(null)} className="ml-2 hover:opacity-80 shrink-0">
-                  <X size={18} />
+                  <Icons.X size={18} />
                 </button>
               </div>
             </motion.div>
@@ -121,7 +239,7 @@ export default function AdminToolbar() {
             className="fixed top-16 md:top-20 left-0 right-0 z-40 bg-gold text-white py-2 px-4 text-center text-sm font-medium shadow-md"
           >
             <div className="flex items-center justify-center gap-2 flex-wrap">
-              <Pencil size={16} className="shrink-0" />
+              <Icons.Pencil size={16} className="shrink-0" />
               <span>Edit Mode Active</span>
               <span className="hidden sm:inline">- Tap any text or image to edit</span>
               {hasChanges && (
@@ -167,7 +285,7 @@ export default function AdminToolbar() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-gold" />
+                    <Icons.Sparkles size={20} className="text-gold" />
                   </div>
                   <div>
                     <h2 className="font-bold text-gray-900 dark:text-white">Admin Tools</h2>
@@ -178,7 +296,7 @@ export default function AdminToolbar() {
                   onClick={() => setIsExpanded(false)}
                   className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
                 >
-                  <X size={20} className="text-gray-600 dark:text-gray-300" />
+                  <Icons.X size={20} className="text-gray-600 dark:text-gray-300" />
                 </button>
               </div>
             </div>
@@ -203,7 +321,7 @@ export default function AdminToolbar() {
                         : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200'
                     }`}
                   >
-                    {isEditMode ? <EyeOff size={28} /> : <Eye size={28} />}
+                    {isEditMode ? <Icons.EyeOff size={28} /> : <Icons.Eye size={28} />}
                     <span className="font-semibold mt-2 text-sm">
                       {isEditMode ? 'Exit Edit' : 'Edit Mode'}
                     </span>
@@ -220,7 +338,7 @@ export default function AdminToolbar() {
                     }}
                     className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 transition-all hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                   >
-                    <Palette size={28} />
+                    <Icons.Palette size={28} />
                     <span className="font-semibold mt-2 text-sm">Theme</span>
                     <span className="text-xs opacity-70 mt-0.5">Colors & style</span>
                   </button>
@@ -240,9 +358,9 @@ export default function AdminToolbar() {
                       className="flex flex-col items-center justify-center p-4 rounded-2xl bg-green-500 text-white transition-all disabled:opacity-50"
                     >
                       {isPublishing ? (
-                        <Loader2 size={28} className="animate-spin" />
+                        <Icons.Loader size={28} className="animate-spin" />
                       ) : (
-                        <Upload size={28} />
+                        <Icons.Upload size={28} />
                       )}
                       <span className="font-semibold mt-2 text-sm">Publish</span>
                       <span className="text-xs opacity-80 mt-0.5">Save all changes</span>
@@ -252,7 +370,7 @@ export default function AdminToolbar() {
                       onClick={handleDiscard}
                       className="flex flex-col items-center justify-center p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 transition-all"
                     >
-                      <Trash2 size={28} />
+                      <Icons.Trash size={28} />
                       <span className="font-semibold mt-2 text-sm">Discard</span>
                       <span className="text-xs opacity-70 mt-0.5">Remove changes</span>
                     </button>
@@ -297,7 +415,7 @@ export default function AdminToolbar() {
                     onClick={() => setIsExpanded(false)}
                     className="flex items-center justify-center gap-2 w-full p-3 rounded-xl bg-primary-500 text-white font-medium"
                   >
-                    <Home size={20} />
+                    <Icons.Home size={20} />
                     Back to Website
                   </Link>
                 </div>
@@ -326,7 +444,7 @@ export default function AdminToolbar() {
               exit={{ rotate: 90, opacity: 0 }}
               transition={{ duration: 0.15 }}
             >
-              <ChevronUp size={28} />
+              <Icons.ChevronUp size={28} />
             </motion.div>
           ) : (
             <motion.div
@@ -336,7 +454,7 @@ export default function AdminToolbar() {
               exit={{ rotate: -90, opacity: 0 }}
               transition={{ duration: 0.15 }}
             >
-              <Settings size={24} />
+              <Icons.Settings size={24} />
             </motion.div>
           )}
         </AnimatePresence>
