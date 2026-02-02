@@ -25,9 +25,9 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center hero-gradient overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 right-20 w-72 h-72 bg-accent-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-20 w-96 h-96 bg-primary-300 rounded-full blur-3xl" />
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-20 right-0 md:right-20 w-48 md:w-72 h-48 md:h-72 bg-accent-500 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-0 md:left-20 w-64 md:w-96 h-64 md:h-96 bg-primary-300 rounded-full blur-3xl" />
         </div>
 
         <div className="container-custom relative z-10 py-20">
