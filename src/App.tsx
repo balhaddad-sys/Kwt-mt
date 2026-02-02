@@ -14,6 +14,7 @@ import TeamPage from './pages/TeamPage';
 import CommunityPage from './pages/CommunityPage';
 import GalleryPage from './pages/GalleryPage';
 import ContactPage from './pages/ContactPage';
+import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
                   <Route path="/community" element={<CommunityPage />} />
                   <Route path="/gallery" element={<GalleryPage />} />
                   <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
