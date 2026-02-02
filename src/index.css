@@ -21,11 +21,11 @@
 
 @layer base {
   html {
-    @apply scroll-smooth;
+    @apply scroll-smooth overflow-x-hidden;
   }
 
   body {
-    @apply font-sans antialiased text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-900;
+    @apply font-sans antialiased text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-900 overflow-x-hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
