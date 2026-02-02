@@ -7,6 +7,7 @@ import { EditableText, EditableImage } from '../components/editable';
 import { mockEvents, mockStatistics, mockAnnouncements } from '../data/mockData';
 import { motion } from 'framer-motion';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import { useLivePageEditor } from '../components/admin/LivePageEditor';
 
 // Hero Section Component
 function HeroSection() {
@@ -589,9 +590,33 @@ const sectionComponents: Record<string, React.FC> = {
 };
 
 export default function HomePage() {
-  const { isSectionVisible, getSortedSections, loading } = useSiteSettings();
+  const { loading } = useSiteSettings();
+  const {
+    isAdmin,
+    isEditMode,
+    isLoaded,
+    sections,
+    hasChanges,
+    saving,
+    activeSection,
+    sensors,
+    toggleEditMode,
+    handleDragStart,
+    handleDragEnd,
+    toggleVisibility,
+    saveChanges,
+    cancelChanges,
+    DraggableSection,
+    FloatingEditorButton,
+    DragOverlayContent,
+    DndContext,
+    SortableContext,
+    DragOverlay,
+    closestCenter,
+    verticalListSortingStrategy,
+  } = useLivePageEditor();
 
-  if (loading) {
+  if (loading || !isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500" />
@@ -599,22 +624,70 @@ export default function HomePage() {
     );
   }
 
-  const sortedSections = getSortedSections();
+  // Filter visible sections when not in edit mode
+  const visibleSections = isEditMode
+    ? sections
+    : sections.filter((s) => s.visible);
 
   return (
     <>
-      {sortedSections.map((section) => {
-        if (!isSectionVisible(section.id)) {
-          return null;
-        }
+      {/* Edit Mode Banner */}
+      {isEditMode && (
+        <div className="bg-blue-500 text-white text-center py-3 px-4 text-sm font-medium sticky top-0 z-50">
+          <span className="mr-2">📐</span>
+          Edit Mode: Drag sections to reorder, tap eye to hide/show
+        </div>
+      )}
 
-        const SectionComponent = sectionComponents[section.id];
-        if (!SectionComponent) {
-          return null;
-        }
+      {/* Sections with Drag & Drop */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={visibleSections.map((s) => s.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className={isEditMode ? 'space-y-4 p-4 bg-neutral-100 dark:bg-neutral-900 min-h-screen' : ''}>
+            {visibleSections.map((section) => {
+              const SectionComponent = sectionComponents[section.id];
+              if (!SectionComponent) return null;
 
-        return <SectionComponent key={section.id} />;
-      })}
+              return (
+                <DraggableSection
+                  key={section.id}
+                  section={section}
+                  isEditMode={isEditMode}
+                  onToggleVisibility={toggleVisibility}
+                >
+                  <SectionComponent />
+                </DraggableSection>
+              );
+            })}
+          </div>
+        </SortableContext>
+
+        {/* Drag Overlay */}
+        <DragOverlay>
+          {activeSection ? (
+            <DragOverlayContent section={activeSection} />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
+      {/* Floating Edit Button (Admin Only) */}
+      {isAdmin && (
+        <FloatingEditorButton
+          isEditMode={isEditMode}
+          hasChanges={hasChanges}
+          saving={saving}
+          onToggleEdit={toggleEditMode}
+          onSave={saveChanges}
+          onCancel={cancelChanges}
+        />
+      )}
     </>
   );
 }
