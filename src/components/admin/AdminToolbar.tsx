@@ -194,7 +194,7 @@ export default function AdminToolbar() {
   return (
     <>
       {/* Toast Messages */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[10000] pointer-events-none">
         <AnimatePresence>
           {showSuccess && (
             <motion.div
@@ -236,7 +236,7 @@ export default function AdminToolbar() {
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -50, opacity: 0 }}
-            className="fixed top-16 md:top-20 left-0 right-0 z-40 bg-gold text-white py-2 px-4 text-center text-sm font-medium shadow-md"
+            className="fixed top-16 md:top-20 left-0 right-0 z-[9997] bg-gold text-white py-2 px-4 text-center text-sm font-medium shadow-md"
           >
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <Icons.Pencil size={16} className="shrink-0" />
@@ -260,7 +260,7 @@ export default function AdminToolbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsExpanded(false)}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/50 z-[9998]"
           />
         )}
       </AnimatePresence>
@@ -273,7 +273,8 @@ export default function AdminToolbar() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl max-h-[85vh] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-[9999] bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl max-h-[85vh] overflow-hidden"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
@@ -429,11 +430,15 @@ export default function AdminToolbar() {
       <motion.button
         onClick={() => setIsExpanded(!isExpanded)}
         whileTap={{ scale: 0.95 }}
-        className={`fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+        className={`fixed z-[9999] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
           isEditMode
             ? 'bg-gold text-white'
             : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
         }`}
+        style={{
+          bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+          right: '16px'
+        }}
       >
         <AnimatePresence mode="wait">
           {isExpanded ? (
