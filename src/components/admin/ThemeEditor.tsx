@@ -205,23 +205,23 @@ export default function ThemeEditor() {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center shrink-0">
             <Palette className="w-5 h-5 text-primary-500" />
           </div>
           <div>
             <h2 className="text-lg font-display font-bold text-neutral-900 dark:text-white">
-              Theme Editor
+              Theme Colors
             </h2>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Customize your site colors in real-time
+              Customize site colors
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {hasChanges && (
-            <span className="text-sm text-amber-600 dark:text-amber-400">Unsaved changes</span>
+            <span className="text-xs text-amber-600 dark:text-amber-400 hidden sm:inline">Unsaved</span>
           )}
           <Button
             variant="outline"
@@ -230,7 +230,7 @@ export default function ThemeEditor() {
             leftIcon={<RotateCcw className="w-4 h-4" />}
             disabled={isSaving}
           >
-            Reset
+            <span className="hidden sm:inline">Reset</span>
           </Button>
           <Button
             variant="primary"
@@ -239,7 +239,7 @@ export default function ThemeEditor() {
             leftIcon={saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             disabled={isSaving || !hasChanges}
           >
-            {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Changes'}
+            {isSaving ? '...' : saveSuccess ? 'Saved!' : 'Save'}
           </Button>
         </div>
       </div>
@@ -251,9 +251,9 @@ export default function ThemeEditor() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Color Inputs */}
-        <Card padding="lg">
+        <Card padding="md">
           <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-4 uppercase tracking-wider">
             Brand Colors
           </h3>
@@ -293,7 +293,7 @@ export default function ThemeEditor() {
         </Card>
 
         {/* Live Preview */}
-        <Card padding="lg">
+        <Card padding="md">
           <div className="flex items-center gap-2 mb-4">
             <Eye className="w-4 h-4 text-neutral-500" />
             <h3 className="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider">

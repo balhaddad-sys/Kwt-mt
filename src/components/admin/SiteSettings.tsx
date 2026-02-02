@@ -186,9 +186,9 @@ export default function SiteSettings() {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center shrink-0">
             <Settings className="w-5 h-5 text-blue-500" />
           </div>
           <div>
@@ -196,13 +196,13 @@ export default function SiteSettings() {
               Site Settings
             </h2>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Control homepage content, statistics, and site-wide settings
+              Homepage, stats & contact
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {hasChanges && (
-            <span className="text-sm text-amber-600 dark:text-amber-400">Unsaved changes</span>
+            <span className="text-xs text-amber-600 dark:text-amber-400 hidden sm:inline">Unsaved</span>
           )}
           <Button
             variant="outline"
@@ -211,7 +211,7 @@ export default function SiteSettings() {
             leftIcon={<RotateCcw className="w-4 h-4" />}
             disabled={!hasChanges || saving}
           >
-            Reset
+            <span className="hidden sm:inline">Reset</span>
           </Button>
           <Button
             variant="primary"
@@ -220,7 +220,7 @@ export default function SiteSettings() {
             leftIcon={saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             disabled={!hasChanges || saving}
           >
-            {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Changes'}
+            {saving ? '...' : saveSuccess ? 'Saved!' : 'Save'}
           </Button>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function SiteSettings() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid gap-6">
         {/* Hero Section Settings */}
         <Card padding="lg">
           <div className="flex items-center gap-2 mb-4">

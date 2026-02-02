@@ -25,6 +25,9 @@ function App() {
           <EditProvider>
             <Router>
               <Routes>
+                {/* Admin route - without main layout */}
+                <Route path="/admin" element={<AdminPage />} />
+
                 {/* Main routes with layout */}
                 <Route element={<Layout />}>
                   <Route path="/" element={<HomePage />} />
@@ -34,7 +37,6 @@ function App() {
                   <Route path="/community" element={<CommunityPage />} />
                   <Route path="/gallery" element={<GalleryPage />} />
                   <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
