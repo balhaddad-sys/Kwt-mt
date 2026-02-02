@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard,
+  LayoutGrid,
   Palette,
   Image,
   Calendar,
@@ -38,8 +39,9 @@ import ContentManager from '../components/admin/ContentManager';
 import TeamManager from '../components/admin/TeamManager';
 import AdminSettings from '../components/admin/AdminSettings';
 import SiteSettings from '../components/admin/SiteSettings';
+import VisualPageBuilder from '../components/admin/VisualPageBuilder';
 
-type AdminTab = 'dashboard' | 'site' | 'theme' | 'media' | 'events' | 'content' | 'team' | 'settings';
+type AdminTab = 'dashboard' | 'page-builder' | 'site' | 'theme' | 'media' | 'events' | 'content' | 'team' | 'settings';
 
 interface TabConfig {
   id: AdminTab;
@@ -50,6 +52,7 @@ interface TabConfig {
 
 const tabs: TabConfig[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
+  { id: 'page-builder', label: 'Page Builder', icon: LayoutGrid, color: 'text-pink-500' },
   { id: 'site', label: 'Site Settings', icon: Settings, color: 'text-blue-500' },
   { id: 'theme', label: 'Theme Colors', icon: Palette, color: 'text-purple-500' },
   { id: 'media', label: 'Media', icon: Image, color: 'text-green-500' },
@@ -205,8 +208,9 @@ export default function AdminPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {[
+                { label: 'Page Builder', icon: LayoutGrid, color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-500', tab: 'page-builder' as AdminTab },
                 { label: 'Create Event', icon: Calendar, color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-500', tab: 'events' as AdminTab },
                 { label: 'Upload Media', icon: Image, color: 'bg-green-100 dark:bg-green-900/30 text-green-500', tab: 'media' as AdminTab },
                 { label: 'Edit Content', icon: FileText, color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-500', tab: 'content' as AdminTab },
@@ -333,6 +337,8 @@ export default function AdminPage() {
             </div>
           </motion.div>
         );
+      case 'page-builder':
+        return <VisualPageBuilder />;
       case 'site':
         return <SiteSettings />;
       case 'theme':
