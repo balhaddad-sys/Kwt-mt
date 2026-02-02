@@ -185,10 +185,11 @@ export default function AdminToolbar() {
 
   const quickLinks = [
     { href: '/admin', icon: Icons.Grid, label: 'Dashboard', description: 'Admin overview' },
+    { href: '/admin?tab=site', icon: Icons.Settings, label: 'Site Settings', description: 'Stats, hero, contact' },
+    { href: '/admin?tab=theme', icon: Icons.Palette, label: 'Theme', description: 'Colors & styling' },
+    { href: '/admin?tab=media', icon: Icons.Image, label: 'Media', description: 'Upload images' },
     { href: '/admin?tab=events', icon: Icons.Calendar, label: 'Events', description: 'Manage events' },
     { href: '/admin?tab=team', icon: Icons.Users, label: 'Team', description: 'Edit team members' },
-    { href: '/admin?tab=media', icon: Icons.Image, label: 'Media', description: 'Upload images' },
-    { href: '/admin?tab=content', icon: Icons.FileText, label: 'Content', description: 'Edit page content' },
   ];
 
   return (

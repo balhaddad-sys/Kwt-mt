@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard,
   Palette,
@@ -37,8 +37,9 @@ import EventManager from '../components/admin/EventManager';
 import ContentManager from '../components/admin/ContentManager';
 import TeamManager from '../components/admin/TeamManager';
 import AdminSettings from '../components/admin/AdminSettings';
+import SiteSettings from '../components/admin/SiteSettings';
 
-type AdminTab = 'dashboard' | 'theme' | 'media' | 'events' | 'content' | 'team' | 'settings';
+type AdminTab = 'dashboard' | 'site' | 'theme' | 'media' | 'events' | 'content' | 'team' | 'settings';
 
 interface TabConfig {
   id: AdminTab;
@@ -49,20 +50,29 @@ interface TabConfig {
 
 const tabs: TabConfig[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-500' },
-  { id: 'theme', label: 'Theme Editor', icon: Palette, color: 'text-purple-500' },
-  { id: 'media', label: 'Media Manager', icon: Image, color: 'text-green-500' },
+  { id: 'site', label: 'Site Settings', icon: Settings, color: 'text-blue-500' },
+  { id: 'theme', label: 'Theme Colors', icon: Palette, color: 'text-purple-500' },
+  { id: 'media', label: 'Media', icon: Image, color: 'text-green-500' },
   { id: 'events', label: 'Events', icon: Calendar, color: 'text-orange-500' },
-  { id: 'content', label: 'Content', icon: FileText, color: 'text-indigo-500' },
+  { id: 'content', label: 'Page Content', icon: FileText, color: 'text-indigo-500' },
   { id: 'team', label: 'Team', icon: Users, color: 'text-cyan-500' },
-  { id: 'settings', label: 'Settings', icon: Settings, color: 'text-neutral-500' },
 ];
 
 export default function AdminPage() {
   const { isAdmin, loading, currentUser, signOut } = useAuth();
   const { toggleTheme, actualTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Handle tab from URL query parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as AdminTab | null;
+    if (tabParam && tabs.some(t => t.id === tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Loading state
   if (loading) {
@@ -323,6 +333,8 @@ export default function AdminPage() {
             </div>
           </motion.div>
         );
+      case 'site':
+        return <SiteSettings />;
       case 'theme':
         return <ThemeEditor />;
       case 'media':
@@ -333,8 +345,6 @@ export default function AdminPage() {
         return <ContentManager />;
       case 'team':
         return <TeamManager />;
-      case 'settings':
-        return <AdminSettings />;
       default:
         return null;
     }
