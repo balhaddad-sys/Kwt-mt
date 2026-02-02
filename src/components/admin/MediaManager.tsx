@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Upload,
   Image as ImageIcon,
@@ -20,6 +20,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
   deleteObject,
+  UploadTask,
 } from 'firebase/storage';
 import {
   collection,
@@ -75,6 +76,23 @@ export default function MediaManager() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedImage, setSelectedImage] = useState<MediaItem | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // Refs to track mounted state and active upload tasks
+  const isMountedRef = useRef(true);
+  const activeUploadTasks = useRef<Map<string, UploadTask>>(new Map());
+
+  // Cleanup on unmount: cancel active uploads
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Cancel all active upload tasks
+      activeUploadTasks.current.forEach((task) => {
+        task.cancel();
+      });
+      activeUploadTasks.current.clear();
+    };
+  }, []);
 
   // Fetch media from Firestore
   useEffect(() => {
@@ -151,13 +169,19 @@ export default function MediaManager() {
     const timestamp = Date.now();
     const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const storageRef = ref(storage, `media/${uploadCategory}/${filename}`);
+    const taskId = `${timestamp}-${file.name}`;
 
     // Upload file
     const uploadTask = uploadBytesResumable(storageRef, file);
 
+    // Track the upload task for cancellation
+    activeUploadTasks.current.set(taskId, uploadTask);
+
     uploadTask.on(
       'state_changed',
       (snapshot) => {
+        // Check if component is still mounted before updating state
+        if (!isMountedRef.current) return;
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         setUploading((prev) =>
           prev.map((u) =>
@@ -166,6 +190,18 @@ export default function MediaManager() {
         );
       },
       (error) => {
+        // Remove from active tasks
+        activeUploadTasks.current.delete(taskId);
+
+        // Check if component is still mounted before updating state
+        if (!isMountedRef.current) return;
+
+        // Ignore cancelled upload errors
+        if (error.code === 'storage/canceled') {
+          setUploading((prev) => prev.filter((u) => u.file !== file));
+          return;
+        }
+
         console.error('Upload error:', error);
         setUploading((prev) =>
           prev.map((u) =>
@@ -174,8 +210,17 @@ export default function MediaManager() {
         );
       },
       async () => {
+        // Remove from active tasks
+        activeUploadTasks.current.delete(taskId);
+
+        // Check if component is still mounted before updating state
+        if (!isMountedRef.current) return;
+
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+          // Check mounted state again after async operation
+          if (!isMountedRef.current) return;
 
           // Save to Firestore
           await addDoc(collection(db, 'media'), {
@@ -188,6 +233,9 @@ export default function MediaManager() {
             uploadedAt: Timestamp.now(),
           });
 
+          // Check mounted state again after async operation
+          if (!isMountedRef.current) return;
+
           setUploading((prev) =>
             prev.map((u) =>
               u.file === file ? { ...u, status: 'completed', progress: 100 } : u
@@ -196,9 +244,13 @@ export default function MediaManager() {
 
           // Remove from uploading state after delay
           setTimeout(() => {
+            if (!isMountedRef.current) return;
             setUploading((prev) => prev.filter((u) => u.file !== file));
           }, 2000);
         } catch (error) {
+          // Check mounted state before updating state
+          if (!isMountedRef.current) return;
+
           console.error('Error saving to Firestore:', error);
           setUploading((prev) =>
             prev.map((u) =>

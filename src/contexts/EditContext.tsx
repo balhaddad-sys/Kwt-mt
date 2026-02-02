@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { doc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
@@ -50,6 +50,17 @@ export function EditProvider({ children }: { children: React.ReactNode }) {
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
   const [pendingUploads, setPendingUploads] = useState<Map<string, PendingImageUpload>>(new Map());
   const [isPublishing, setIsPublishing] = useState(false);
+
+  // Ref to track mounted state
+  const isMountedRef = useRef(true);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const toggleEditMode = useCallback(() => {
     if (!isAdmin) return;
@@ -110,11 +121,21 @@ export function EditProvider({ children }: { children: React.ReactNode }) {
       const uploadResults = new Map<string, string>();
 
       for (const [id, upload] of pendingUploads) {
+        // Check if still mounted before each upload
+        if (!isMountedRef.current) return;
+
         const storageRef = ref(storage, `content/${upload.collection}/${upload.documentId}/${upload.field}_${Date.now()}`);
         const snapshot = await uploadBytes(storageRef, upload.file);
+
+        // Check if still mounted after upload
+        if (!isMountedRef.current) return;
+
         const downloadURL = await getDownloadURL(snapshot.ref);
         uploadResults.set(id, downloadURL);
       }
+
+      // Check if still mounted before processing changes
+      if (!isMountedRef.current) return;
 
       // Group changes by document
       const documentChanges = new Map<string, { collection: string; documentId: string; changes: Record<string, unknown> }>();
@@ -164,6 +185,9 @@ export function EditProvider({ children }: { children: React.ReactNode }) {
 
       await batch.commit();
 
+      // Check if still mounted before updating state
+      if (!isMountedRef.current) return;
+
       // Clear pending changes and uploads
       setPendingChanges(new Map());
 
@@ -178,7 +202,10 @@ export function EditProvider({ children }: { children: React.ReactNode }) {
       console.error('Error publishing changes:', error);
       throw error;
     } finally {
-      setIsPublishing(false);
+      // Check if still mounted before updating state
+      if (isMountedRef.current) {
+        setIsPublishing(false);
+      }
     }
   }, [currentUser, pendingChanges, pendingUploads]);
 

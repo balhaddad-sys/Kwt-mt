@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Users,
   PlusCircle,
@@ -85,6 +85,17 @@ export default function TeamManager() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [reordering, setReordering] = useState(false);
 
+  // Ref to track mounted state
+  const isMountedRef = useRef(true);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Fetch team members from Firestore
   useEffect(() => {
     const teamQuery = query(
@@ -137,14 +148,27 @@ export default function TeamManager() {
       const storageRef = ref(storage, `team/${filename}`);
 
       const uploadTask = await uploadBytesResumable(storageRef, file);
+
+      // Check if component is still mounted before continuing
+      if (!isMountedRef.current) return;
+
       const downloadURL = await getDownloadURL(uploadTask.ref);
+
+      // Check mounted state again after async operation
+      if (!isMountedRef.current) return;
 
       setFormData((prev) => ({ ...prev, photoURL: downloadURL }));
     } catch (err) {
+      // Check mounted state before updating state on error
+      if (!isMountedRef.current) return;
+
       console.error('Error uploading photo:', err);
       setError('Failed to upload photo');
     } finally {
-      setUploadingPhoto(false);
+      // Check mounted state before updating state
+      if (isMountedRef.current) {
+        setUploadingPhoto(false);
+      }
     }
   };
 
