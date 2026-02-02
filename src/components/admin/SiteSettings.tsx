@@ -9,6 +9,12 @@ import {
   Hash,
   Type,
   Palette,
+  Layers,
+  Eye,
+  EyeOff,
+  ChevronUp,
+  ChevronDown,
+  GripVertical,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
@@ -18,7 +24,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
-interface SiteSettingsData {
+// Section configuration
+export interface SectionConfig {
+  id: string;
+  label: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface SiteSettingsData {
   // Hero Section
   heroTitle: string;
   heroSubtitle: string;
@@ -49,6 +63,9 @@ interface SiteSettingsData {
   socialTwitter: string;
   socialFacebook: string;
   socialLinkedin: string;
+
+  // Section Layout
+  sections: SectionConfig[];
 }
 
 const defaultSettings: SiteSettingsData = {
@@ -77,6 +94,19 @@ const defaultSettings: SiteSettingsData = {
   socialTwitter: '',
   socialFacebook: '',
   socialLinkedin: '',
+
+  // Default section layout
+  sections: [
+    { id: 'hero', label: 'Hero Banner', visible: true, order: 0 },
+    { id: 'announcements', label: 'Announcements', visible: true, order: 1 },
+    { id: 'stats', label: 'Statistics', visible: true, order: 2 },
+    { id: 'about', label: 'About Section', visible: true, order: 3 },
+    { id: 'featured-events', label: 'Featured Events', visible: true, order: 4 },
+    { id: 'upcoming-events', label: 'Upcoming Events', visible: true, order: 5 },
+    { id: 'why-join', label: 'Why Join Us', visible: true, order: 6 },
+    { id: 'cta', label: 'Call to Action', visible: true, order: 7 },
+    { id: 'gallery', label: 'Gallery Preview', visible: true, order: 8 },
+  ],
 };
 
 export default function SiteSettings() {
@@ -170,6 +200,55 @@ export default function SiteSettings() {
       setSettings(originalSettings);
     }
   };
+
+  // Section visibility toggle
+  const handleSectionVisibilityToggle = (sectionId: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      sections: prev.sections.map((section) =>
+        section.id === sectionId
+          ? { ...section, visible: !section.visible }
+          : section
+      ),
+    }));
+    setSaveSuccess(false);
+    setError(null);
+  };
+
+  // Move section up in order
+  const handleMoveSection = (sectionId: string, direction: 'up' | 'down') => {
+    setSettings((prev) => {
+      const sortedSections = [...prev.sections].sort((a, b) => a.order - b.order);
+      const currentIndex = sortedSections.findIndex((s) => s.id === sectionId);
+
+      if (
+        (direction === 'up' && currentIndex === 0) ||
+        (direction === 'down' && currentIndex === sortedSections.length - 1)
+      ) {
+        return prev;
+      }
+
+      const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
+      // Swap order values
+      const newSections = sortedSections.map((section, index) => {
+        if (index === currentIndex) {
+          return { ...section, order: sortedSections[swapIndex].order };
+        }
+        if (index === swapIndex) {
+          return { ...section, order: sortedSections[currentIndex].order };
+        }
+        return section;
+      });
+
+      return { ...prev, sections: newSections };
+    });
+    setSaveSuccess(false);
+    setError(null);
+  };
+
+  // Get sorted sections for display
+  const sortedSections = [...settings.sections].sort((a, b) => a.order - b.order);
 
   if (loading) {
     return (
@@ -447,6 +526,101 @@ export default function SiteSettings() {
               </div>
             ))}
           </div>
+        </Card>
+
+        {/* Layout & Sections */}
+        <Card padding="lg">
+          <div className="flex items-center gap-2 mb-4">
+            <Layers className="w-4 h-4 text-neutral-500" />
+            <h3 className="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider">
+              Layout & Sections
+            </h3>
+          </div>
+
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+            Show/hide sections and change their order on the homepage
+          </p>
+
+          <div className="space-y-2">
+            {sortedSections.map((section, index) => (
+              <div
+                key={section.id}
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                  section.visible
+                    ? 'bg-white dark:bg-neutral-700 border-neutral-200 dark:border-neutral-600'
+                    : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 opacity-60'
+                }`}
+              >
+                {/* Drag handle indicator */}
+                <GripVertical className="w-4 h-4 text-neutral-400 shrink-0" />
+
+                {/* Visibility toggle */}
+                <button
+                  onClick={() => handleSectionVisibilityToggle(section.id)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+                    section.visible
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      : 'bg-neutral-200 dark:bg-neutral-600 text-neutral-400'
+                  }`}
+                  title={section.visible ? 'Hide section' : 'Show section'}
+                >
+                  {section.visible ? (
+                    <Eye className="w-4 h-4" />
+                  ) : (
+                    <EyeOff className="w-4 h-4" />
+                  )}
+                </button>
+
+                {/* Section name */}
+                <span
+                  className={`flex-1 text-sm font-medium ${
+                    section.visible
+                      ? 'text-neutral-900 dark:text-white'
+                      : 'text-neutral-500 dark:text-neutral-400 line-through'
+                  }`}
+                >
+                  {section.label}
+                </span>
+
+                {/* Order position */}
+                <span className="text-xs text-neutral-400 dark:text-neutral-500 w-6 text-center">
+                  #{index + 1}
+                </span>
+
+                {/* Move up/down buttons */}
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleMoveSection(section.id, 'up')}
+                    disabled={index === 0}
+                    className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+                      index === 0
+                        ? 'text-neutral-300 dark:text-neutral-600 cursor-not-allowed'
+                        : 'text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-600 hover:text-neutral-700 dark:hover:text-neutral-200'
+                    }`}
+                    title="Move up"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleMoveSection(section.id, 'down')}
+                    disabled={index === sortedSections.length - 1}
+                    className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
+                      index === sortedSections.length - 1
+                        ? 'text-neutral-300 dark:text-neutral-600 cursor-not-allowed'
+                        : 'text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-600 hover:text-neutral-700 dark:hover:text-neutral-200'
+                    }`}
+                    title="Move down"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-4 text-xs text-neutral-400 dark:text-neutral-500">
+            Click the eye icon to show/hide a section. Use arrows to reorder.
+          </p>
         </Card>
       </div>
     </motion.div>
