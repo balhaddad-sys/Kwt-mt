@@ -203,9 +203,9 @@ export default function ContentManager() {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center shrink-0">
             <FileText className="w-5 h-5 text-purple-500" />
           </div>
           <div>
@@ -213,13 +213,13 @@ export default function ContentManager() {
               Content Manager
             </h2>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Edit page content in both languages
+              Edit page content
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {hasChanges && (
-            <span className="text-sm text-amber-600 dark:text-amber-400">Unsaved changes</span>
+            <span className="text-xs text-amber-600 dark:text-amber-400 hidden sm:inline">Unsaved</span>
           )}
           <Button
             variant="outline"
@@ -228,7 +228,7 @@ export default function ContentManager() {
             leftIcon={<RotateCcw className="w-4 h-4" />}
             disabled={!hasChanges || saving}
           >
-            Reset
+            <span className="hidden sm:inline">Reset</span>
           </Button>
           <Button
             variant="primary"
@@ -237,7 +237,7 @@ export default function ContentManager() {
             leftIcon={saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             disabled={!hasChanges || saving}
           >
-            {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Changes'}
+            {saving ? '...' : saveSuccess ? 'Saved!' : 'Save'}
           </Button>
         </div>
       </div>
@@ -250,31 +250,28 @@ export default function ContentManager() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-4 gap-6">
-        {/* Page Selector Sidebar */}
-        <Card padding="sm" className="lg:col-span-1">
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3 px-2">
-            Select Page
-          </h3>
-          <nav className="space-y-1">
+      <div className="space-y-4">
+        {/* Page Selector - Horizontal scroll on mobile */}
+        <Card padding="sm">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
             {(Object.keys(pages) as PageId[]).map((pageId) => (
               <button
                 key={pageId}
                 onClick={() => setSelectedPage(pageId)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0 ${
                   selectedPage === pageId
                     ? 'bg-primary-500 text-white'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                    : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
                 }`}
               >
-                {pages[pageId].label}
+                {pages[pageId].label.replace(' Page', '')}
               </button>
             ))}
-          </nav>
+          </div>
         </Card>
 
         {/* Content Editor */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="space-y-4">
           {/* Language Toggle */}
           <Card padding="md">
             <div className="flex items-center justify-between">
