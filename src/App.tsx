@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -17,7 +18,34 @@ import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 
+// Advanced Features (MedWard Pro Addendum)
+// @ts-ignore
+import { Privacy } from './utils/privacy.js';
+// @ts-ignore
+import { Theme as ThemeManager } from './utils/theme.js';
+// @ts-ignore
+import { Audit } from './services/audit.service.js';
+// @ts-ignore
+import { initTaskTypeaheads } from './ui/components/task-typeahead.js';
+
 function App() {
+  // Initialize advanced features on mount
+  useEffect(() => {
+    // Initialize privacy protection (auto-blur after inactivity)
+    Privacy.init();
+
+    // Initialize enhanced theme manager (ambient light sensor, time-based)
+    ThemeManager.init();
+
+    // Log session start for audit trail
+    Audit.log(Audit.actions.AUTH_LOGIN, 'session', null);
+
+    // Initialize clinical task typeaheads on any matching inputs
+    const timer = setTimeout(() => initTaskTypeaheads(), 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <ThemeProvider>
       <LanguageProvider>
