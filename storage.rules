@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ===== CMS ASSETS =====
+    // Assets uploaded via the visual editor
+    match /cms-assets/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.auth.token.role in ['editor', 'admin', 'super_admin'] &&
+                      request.resource.size < 10 * 1024 * 1024;  // 10MB limit
+    }
+
+    // ===== GALLERY IMAGES =====
+    match /gallery/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.auth.token.role in ['admin', 'super_admin'] &&
+                      request.resource.size < 5 * 1024 * 1024;  // 5MB limit
+    }
+
+    // ===== USER PROFILES =====
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.auth.uid == userId &&
+                      request.resource.size < 2 * 1024 * 1024;  // 2MB limit
+    }
+
+    // ===== EVENT IMAGES =====
+    match /events/{eventId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.auth.token.role in ['admin', 'super_admin'] &&
+                      request.resource.size < 5 * 1024 * 1024;  // 5MB limit
+    }
+  }
+}

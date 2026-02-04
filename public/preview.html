@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREVIEW MODE - KSA Malta</title>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-primary: #1a365d;
+            --color-accent: #d4a853;
+            --color-text: #212529;
+            --color-muted: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        [dir="rtl"] body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        /* Preview Banner */
+        .preview-banner {
+            background: #ffc107;
+            color: #000;
+            padding: 12px 24px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .preview-banner a {
+            color: #000;
+            text-decoration: underline;
+            margin-left: 12px;
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e9ecef;
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        .site-header {
+            background: var(--color-primary);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            position: sticky;
+            top: 41px;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .site-header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .site-header nav {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .site-header nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            padding: 4px 0;
+        }
+
+        .site-header nav a:hover,
+        .site-header nav a.active {
+            opacity: 1;
+            border-bottom: 2px solid var(--color-accent);
+        }
+
+        .lang-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .lang-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        #app-root {
+            min-height: 60vh;
+        }
+
+        /* Footer */
+        .site-footer {
+            background: #f8f9fa;
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 14px;
+            margin-top: 60px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        /* Error Page */
+        .error-page {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .error-page h1 {
+            font-size: 48px;
+            color: var(--color-primary);
+            margin-bottom: 16px;
+        }
+
+        .error-page p {
+            color: var(--color-muted);
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+
+        .error-page a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--color-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .error-page a:hover {
+            background: #2c5282;
+        }
+
+        /* Draft Info */
+        .draft-info {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 16px;
+            margin: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .draft-info h3 {
+            color: #0066cc;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .draft-info p {
+            font-size: 14px;
+            color: #495057;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .site-header {
+                text-align: center;
+                justify-content: center;
+            }
+
+            .site-header nav {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-banner">
+        ⚠️ PREVIEW MODE - You are viewing draft content that is not published yet
+        <a href="/admin/editor.html" id="edit-link">← Back to Editor</a>
+    </div>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>Loading preview...</p>
+    </div>
+
+    <header class="site-header">
+        <div class="logo">
+            <span>🇰🇼</span>
+            <span data-lang-en="KSA Malta (Preview)" data-lang-ar="الطلبة الكويتيين في مالطا (معاينة)">KSA Malta (Preview)</span>
+        </div>
+        <nav>
+            <a href="?page=home" data-lang-en="Home" data-lang-ar="الرئيسية">Home</a>
+            <a href="?page=arrivals" data-lang-en="Arrivals" data-lang-ar="الوصول">Arrivals</a>
+            <a href="?page=housing" data-lang-en="Housing" data-lang-ar="السكن">Housing</a>
+            <a href="?page=souq" data-lang-en="Souq" data-lang-ar="السوق">Souq</a>
+            <a href="?page=archive" data-lang-en="Archive" data-lang-ar="الأرشيف">Archive</a>
+        </nav>
+        <button class="lang-toggle" onclick="toggleLanguage()">العربية</button>
+    </header>
+
+    <main id="app-root"></main>
+    <style id="injected-style"></style>
+
+    <footer class="site-footer">
+        <p style="color: #ffc107; font-weight: 600;">⚠️ PREVIEW MODE - Draft Content</p>
+        <p>© 2026 Kuwaiti Students Association in Malta</p>
+    </footer>
+
+    <script>
+        // Firebase config - REPLACE WITH YOUR CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Get page from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageSlug = urlParams.get('page') || 'home';
+
+        // Update edit link
+        document.getElementById('edit-link').href = `/admin/editor.html?page=${pageSlug}`;
+
+        // Get language preference
+        let currentLang = localStorage.getItem('lang') || 'en';
+        applyLanguage(currentLang);
+
+        // Highlight active nav link
+        document.querySelectorAll('.site-header nav a').forEach(link => {
+            if (link.href.includes('page=' + pageSlug)) {
+                link.classList.add('active');
+            }
+        });
+
+        // Auth check - require authentication to view preview
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                // Redirect to login if not authenticated
+                window.location.href = '/admin/login.html';
+                return;
+            }
+
+            try {
+                const token = await user.getIdTokenResult();
+                if (!token.claims.role || !['admin', 'super_admin', 'editor'].includes(token.claims.role)) {
+                    await auth.signOut();
+                    window.location.href = '/admin/login.html';
+                    return;
+                }
+
+                // User is authenticated, load preview
+                loadPreview();
+
+            } catch (error) {
+                console.error('Auth error:', error);
+                window.location.href = '/admin/login.html';
+            }
+        });
+
+        // Fetch and render DRAFT content
+        async function loadPreview() {
+            try {
+                const doc = await db.collection("pages").doc(pageSlug).get();
+
+                if (doc.exists && doc.data().draft) {
+                    const draft = doc.data().draft;
+                    const meta = doc.data().meta;
+
+                    // Update page title
+                    if (meta) {
+                        const title = currentLang === 'ar' && meta.title_ar ? meta.title_ar : meta.title;
+                        document.title = 'PREVIEW: ' + title + ' - KSA Malta';
+                    }
+
+                    // Show draft info
+                    const draftInfo = `
+                        <div class="draft-info">
+                            <h3>📝 Draft Information</h3>
+                            <p>
+                                <strong>Last Updated:</strong> ${draft.updatedAt ? draft.updatedAt.toDate().toLocaleString() : 'Unknown'}<br>
+                                <strong>Updated By:</strong> ${draft.updatedBy || 'Unknown'}
+                            </p>
+                        </div>
+                    `;
+
+                    // Inject CSS and HTML
+                    document.getElementById('injected-style').innerHTML = draft.css || '';
+                    document.getElementById('app-root').innerHTML = draftInfo + (draft.html || '');
+
+                } else if (doc.exists && doc.data().published) {
+                    // No draft, show published with warning
+                    const published = doc.data().published;
+
+                    const warningInfo = `
+                        <div class="draft-info" style="background: #fff3cd; border-left-color: #ffc107;">
+                            <h3>⚠️ No Draft Available</h3>
+                            <p>Showing published content instead. There is no draft version of this page.</p>
+                        </div>
+                    `;
+
+                    document.getElementById('injected-style').innerHTML = published.css || '';
+                    document.getElementById('app-root').innerHTML = warningInfo + (published.html || '');
+
+                } else {
+                    // Page not found
+                    document.getElementById('app-root').innerHTML = `
+                        <div class="error-page">
+                            <h1>404</h1>
+                            <p>Page not found.</p>
+                            <a href="/admin/index.html">Go to Dashboard</a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading preview:', error);
+                document.getElementById('app-root').innerHTML = `
+                    <div class="error-page">
+                        <h1>Error</h1>
+                        <p>Failed to load preview: ${error.message}</p>
+                        <a href="/admin/index.html">Go to Dashboard</a>
+                    </div>
+                `;
+            }
+
+            document.getElementById('loader').style.display = 'none';
+        }
+
+        // Language toggle
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            localStorage.setItem('lang', currentLang);
+            applyLanguage(currentLang);
+        }
+
+        function applyLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.querySelector('.lang-toggle').textContent = lang === 'en' ? 'العربية' : 'English';
+
+            // Update nav links and other elements
+            document.querySelectorAll('[data-lang-en]').forEach(el => {
+                el.textContent = el.getAttribute('data-lang-' + lang);
+            });
+        }
+    </script>
+</body>
+</html>
