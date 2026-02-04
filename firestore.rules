@@ -90,7 +90,34 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
       allow write: if isAuthenticated() && request.auth.uid == userId;
-      allow read: if isAdmin();  // Admins can read all users
+      allow read, update: if isAdmin();  // Admins can read and update all users (verification)
+    }
+
+    // ===== SENIOR ARCHIVE =====
+    // Only verified students can read, only admins can write
+    match /senior_archive/{docId} {
+      allow read: if isAuthenticated() &&
+                     (isAdmin() ||
+                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.verificationStatus == 'verified');
+      allow write: if isAdmin();
+    }
+
+    // ===== WEBSITE CONTENT =====
+    match /website_content/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ===== TESTIMONIALS =====
+    match /testimonials/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ===== SPOTLIGHTS =====
+    match /spotlights/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Contact messages

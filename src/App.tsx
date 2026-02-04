@@ -16,6 +16,7 @@ import CommunityPage from './pages/CommunityPage';
 import GalleryPage from './pages/GalleryPage';
 import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
+import ArchivePage from './pages/ArchivePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Advanced Features (MedWard Pro Addendum)
@@ -65,6 +66,7 @@ function App() {
                   <Route path="/community" element={<CommunityPage />} />
                   <Route path="/gallery" element={<GalleryPage />} />
                   <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/archive" element={<ArchivePage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
