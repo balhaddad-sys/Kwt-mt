@@ -278,6 +278,54 @@ exports.createFirstAdmin = functions.https.onRequest(async (req, res) => {
 });
 
 /**
+ * Sync audit logs from client
+ * Receives batches of audit log entries from the frontend and stores them in Firestore
+ */
+exports.syncAuditLogs = functions.https.onCall(async (data, context) => {
+    // Allow unauthenticated calls but record auth status
+    const logs = data.logs;
+
+    if (!Array.isArray(logs) || logs.length === 0) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'logs must be a non-empty array'
+        );
+    }
+
+    // Limit batch size
+    if (logs.length > 50) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Maximum 50 logs per batch'
+        );
+    }
+
+    try {
+        const batch = admin.firestore().batch();
+
+        for (const log of logs) {
+            const ref = admin.firestore().collection('audit_logs').doc();
+            batch.set(ref, {
+                ...log,
+                synced: true,
+                serverTimestamp: admin.firestore.FieldValue.serverTimestamp(),
+                syncedBy: context.auth?.uid || 'anonymous'
+            });
+        }
+
+        await batch.commit();
+
+        return { success: true, count: logs.length };
+    } catch (error) {
+        console.error('Error syncing audit logs:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            'Failed to sync audit logs: ' + error.message
+        );
+    }
+});
+
+/**
  * Firestore trigger: Log page changes
  * Automatically logs when pages are created, updated, or deleted
  */

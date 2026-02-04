@@ -48,6 +48,25 @@ service cloud.firestore {
       allow write: if false;  // Only created via server-side or special logic
     }
 
+    // ===== ADMIN SETTINGS COLLECTION =====
+    // Theme colors, admin config, etc.
+    match /admin/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /{subcol}/{subId} {
+        allow read: if isAdmin();
+        allow write: if isAdmin();
+      }
+    }
+
+    // ===== SITE SETTINGS COLLECTION =====
+    // Site-wide settings (hero text, sections, etc.)
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ===== EXISTING APP COLLECTIONS =====
     // Events collection
     match /events/{eventId} {
