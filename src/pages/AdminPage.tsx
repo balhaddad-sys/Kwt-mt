@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Clock,
   Bell,
+  ShieldCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,8 +41,9 @@ import TeamManager from '../components/admin/TeamManager';
 import AdminSettings from '../components/admin/AdminSettings';
 import SiteSettings from '../components/admin/SiteSettings';
 import VisualPageBuilder from '../components/admin/VisualPageBuilder';
+import VerificationManager from '../components/admin/VerificationManager';
 
-type AdminTab = 'dashboard' | 'page-builder' | 'site' | 'theme' | 'media' | 'events' | 'content' | 'team' | 'settings';
+type AdminTab = 'dashboard' | 'page-builder' | 'site' | 'theme' | 'media' | 'events' | 'content' | 'team' | 'verification' | 'settings';
 
 interface TabConfig {
   id: AdminTab;
@@ -59,6 +61,7 @@ const tabs: TabConfig[] = [
   { id: 'events', label: 'Events', icon: Calendar, color: 'text-orange-500' },
   { id: 'content', label: 'Page Content', icon: FileText, color: 'text-indigo-500' },
   { id: 'team', label: 'Team', icon: Users, color: 'text-cyan-500' },
+  { id: 'verification', label: 'Verification', icon: ShieldCheck, color: 'text-amber-500' },
 ];
 
 export default function AdminPage() {
@@ -351,6 +354,8 @@ export default function AdminPage() {
         return <ContentManager />;
       case 'team':
         return <TeamManager />;
+      case 'verification':
+        return <VerificationManager />;
       default:
         return null;
     }

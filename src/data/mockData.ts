@@ -420,5 +420,6 @@ export const navigationItems = [
   { label: 'Team', href: '/team' },
   { label: 'Community', href: '/community' },
   { label: 'Gallery', href: '/gallery' },
+  { label: 'Archive', href: '/archive' },
   { label: 'Contact', href: '/contact' },
 ];

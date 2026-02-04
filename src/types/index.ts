@@ -5,8 +5,22 @@ export interface User {
   displayName: string;
   photoURL?: string;
   role: 'admin' | 'member' | 'guest';
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  studentIdURL?: string;
+  university?: string;
   createdAt: Date;
   lastLogin?: Date;
+}
+
+// Senior Archive
+export interface ArchiveFile {
+  id: string;
+  title: string;
+  subject: 'Medicine' | 'Dentistry' | 'Engineering' | 'General';
+  url: string;
+  type: string;
+  uploadedBy: string;
+  uploadedAt: Date;
 }
 
 export interface Member {

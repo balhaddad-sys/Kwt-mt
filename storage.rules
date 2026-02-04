@@ -2,6 +2,15 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
+    // ===== SITE ASSETS =====
+    // Site-wide images (hero backgrounds, logos, etc.)
+    match /site/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.auth.token.role in ['admin', 'super_admin'] &&
+                      request.resource.size < 10 * 1024 * 1024;  // 10MB limit
+    }
+
     // ===== CMS ASSETS =====
     // Assets uploaded via the visual editor
     match /cms-assets/{allPaths=**} {
@@ -33,6 +42,23 @@ service firebase.storage {
       allow write: if request.auth != null &&
                       request.auth.token.role in ['admin', 'super_admin'] &&
                       request.resource.size < 5 * 1024 * 1024;  // 5MB limit
+    }
+
+    // ===== STUDENT ID CARDS =====
+    // Students upload their own ID, admins can read all
+    match /id_cards/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+                      request.resource.size < 5 * 1024 * 1024;  // 5MB limit
+    }
+
+    // ===== ARCHIVE FILES =====
+    // Only admins can upload, authenticated users can download
+    match /archive_files/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+                      request.auth.token.role in ['admin', 'super_admin'] &&
+                      request.resource.size < 50 * 1024 * 1024;  // 50MB limit for documents
     }
   }
 }

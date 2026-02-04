@@ -24,6 +24,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   isAdmin: boolean;
+  isVerified: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -137,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isAdmin = userProfile?.role === 'admin';
+  const isVerified = userProfile?.verificationStatus === 'verified' || isAdmin;
 
   const value = {
     currentUser,
@@ -148,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     resetPassword,
     isAdmin,
+    isVerified,
   };
 
   return (

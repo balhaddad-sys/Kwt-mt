@@ -178,9 +178,15 @@ export const Audit = {
   },
 
   /**
-   * Sync logs to server
+   * Sync logs to server (disabled until Cloud Functions are deployed)
    */
   async _syncToServer() {
+    // Audit logs are stored locally only.
+    // To enable server sync, deploy the syncAuditLogs Cloud Function
+    // and uncomment the code below.
+    return;
+
+    /*
     const unsynced = localLogs
       .filter(e => !e.synced)
       .slice(0, SYNC_BATCH_SIZE);
@@ -203,6 +209,7 @@ export const Audit = {
     } catch (error) {
       console.warn('[Audit] Sync failed, will retry:', error);
     }
+    */
   },
 
   /**

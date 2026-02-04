@@ -9,6 +9,8 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { EditableText, EditableImage } from '../components/editable';
 import { useEdit } from '../contexts/EditContext';
+import { useAuth } from '../contexts/AuthContext';
+import StudentVerification from '../components/StudentVerification';
 import { mockMembers } from '../data/mockData';
 
 interface Testimonial {
@@ -77,6 +79,7 @@ const defaultSpotlights: Spotlight[] = [
 
 export default function CommunityPage() {
   const { isEditMode } = useEdit();
+  const { currentUser } = useAuth();
   const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
   const [spotlights, setSpotlights] = useState<Spotlight[]>(defaultSpotlights);
 
@@ -467,6 +470,15 @@ export default function CommunityPage() {
           </Link>
         </div>
       </Section>
+
+      {/* Student Verification */}
+      {currentUser && (
+        <Section>
+          <div className="max-w-2xl mx-auto">
+            <StudentVerification />
+          </div>
+        </Section>
+      )}
 
       {/* CTA */}
       <Section variant="gradient">
