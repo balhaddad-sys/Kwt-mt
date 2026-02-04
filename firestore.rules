@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== HELPER FUNCTIONS =====
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+             request.auth.token.role in ['admin', 'super_admin'];
+    }
+
+    function isEditor() {
+      return isAuthenticated() &&
+             request.auth.token.role in ['editor', 'admin', 'super_admin'];
+    }
+
+    // ===== CMS PAGES COLLECTION =====
+    // Pages with Draft/Publish workflow for the visual editor
+    match /pages/{slug} {
+      // Anyone can read published content
+      allow read: if true;
+
+      // Editors can save drafts (only draft field)
+      allow update: if isEditor() &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['draft']);
+
+      // Admins can publish and modify meta
+      allow update: if isAdmin();
+
+      // Only admins can create or delete pages
+      allow create, delete: if isAdmin();
+
+      // Version history subcollection
+      match /versions/{versionId} {
+        allow read: if isEditor();
+        allow write: if isAdmin();
+      }
+    }
+
+    // ===== AUDIT LOGS =====
+    // Read-only audit trail
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;  // Only created via server-side or special logic
+    }
+
+    // ===== EXISTING APP COLLECTIONS =====
+    // Events collection
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Members directory
+    match /members/{memberId} {
+      allow read: if resource.data.isPublic == true;
+      allow write: if isAdmin();
+    }
+
+    // Gallery
+    match /gallery/{photoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAdmin();  // Admins can read all users
+    }
+
+    // Contact messages
+    match /contact_messages/{messageId} {
+      allow create: if true;  // Anyone can submit
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Membership applications
+    match /membership_applications/{appId} {
+      allow create: if true;  // Anyone can apply
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Emergency contacts
+    match /emergency_contacts/{contactId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

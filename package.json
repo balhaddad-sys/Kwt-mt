@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:cms": "./deploy-cms.sh",
+    "deploy:all": "npm run build:cms && firebase deploy",
+    "deploy:hosting": "npm run build:cms && firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore:rules,storage",
+    "deploy:functions": "cd functions && npm install && cd .. && firebase deploy --only functions"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -8,6 +8,26 @@
     ],
     "rewrites": [
       {
+        "source": "/admin/login.html",
+        "destination": "/admin/login.html"
+      },
+      {
+        "source": "/admin/index.html",
+        "destination": "/admin/index.html"
+      },
+      {
+        "source": "/admin/editor.html",
+        "destination": "/admin/editor.html"
+      },
+      {
+        "source": "/preview.html",
+        "destination": "/preview.html"
+      },
+      {
+        "source": "/cms.html",
+        "destination": "/cms.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -49,5 +69,11 @@
         ]
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuwaiti Students Association - Malta</title>
+    <meta name="description" content="Official website of the Kuwaiti Students Association in Malta">
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-primary: #1a365d;
+            --color-accent: #d4a853;
+            --color-text: #212529;
+            --color-muted: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        [dir="rtl"] body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e9ecef;
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        .site-header {
+            background: var(--color-primary);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .site-header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .site-header nav {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .site-header nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            padding: 4px 0;
+        }
+
+        .site-header nav a:hover,
+        .site-header nav a.active {
+            opacity: 1;
+            border-bottom: 2px solid var(--color-accent);
+        }
+
+        .lang-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .lang-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        #app-root {
+            min-height: 60vh;
+        }
+
+        /* Footer */
+        .site-footer {
+            background: #f8f9fa;
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 14px;
+            margin-top: 60px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .site-footer p {
+            margin-bottom: 8px;
+        }
+
+        .site-footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .site-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Emergency Button */
+        .emergency-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(220,53,69,0.4);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+            transition: transform 0.2s;
+        }
+
+        .emergency-btn:hover {
+            transform: scale(1.05);
+        }
+
+        [dir="rtl"] .emergency-btn {
+            right: auto;
+            left: 24px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(220,53,69,0.4); }
+            50% { box-shadow: 0 4px 20px rgba(220,53,69,0.6); }
+        }
+
+        /* Emergency Modal */
+        .emergency-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .emergency-modal.active {
+            display: flex;
+        }
+
+        .emergency-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .emergency-content h2 {
+            color: #dc3545;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .emergency-item {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .emergency-item h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+        }
+
+        .emergency-item a {
+            display: block;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .emergency-item a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-close-modal {
+            width: 100%;
+            padding: 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-close-modal:hover {
+            background: #5a6268;
+        }
+
+        /* Error Page */
+        .error-page {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .error-page h1 {
+            font-size: 48px;
+            color: var(--color-primary);
+            margin-bottom: 16px;
+        }
+
+        .error-page p {
+            color: var(--color-muted);
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+
+        .error-page a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--color-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .error-page a:hover {
+            background: #2c5282;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .site-header {
+                text-align: center;
+                justify-content: center;
+            }
+
+            .site-header nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .emergency-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <header class="site-header">
+        <div class="logo">
+            <span>🇰🇼</span>
+            <span data-lang-en="KSA Malta" data-lang-ar="الطلبة الكويتيين في مالطا">KSA Malta</span>
+        </div>
+        <nav>
+            <a href="?page=home" data-lang-en="Home" data-lang-ar="الرئيسية">Home</a>
+            <a href="?page=arrivals" data-lang-en="Arrivals" data-lang-ar="الوصول">Arrivals</a>
+            <a href="?page=housing" data-lang-en="Housing" data-lang-ar="السكن">Housing</a>
+            <a href="?page=souq" data-lang-en="Souq" data-lang-ar="السوق">Souq</a>
+            <a href="?page=archive" data-lang-en="Archive" data-lang-ar="الأرشيف">Archive</a>
+            <a href="/" data-lang-en="Main Site" data-lang-ar="الموقع الرئيسي">Main Site</a>
+        </nav>
+        <button class="lang-toggle" onclick="toggleLanguage()">العربية</button>
+    </header>
+
+    <main id="app-root"></main>
+    <style id="injected-style"></style>
+
+    <footer class="site-footer">
+        <p>© 2026 Kuwaiti Students Association in Malta</p>
+        <p><a href="/admin/login.html">Admin Login</a></p>
+    </footer>
+
+    <button class="emergency-btn" onclick="showEmergency()" title="Emergency Contacts">🆘</button>
+
+    <!-- Emergency Modal -->
+    <div id="emergency-modal" class="emergency-modal">
+        <div class="emergency-content">
+            <h2>🆘 Emergency Contacts</h2>
+
+            <div class="emergency-item">
+                <h3>Kuwaiti Embassy in Malta</h3>
+                <a href="tel:+35621234567">📞 +356 2123 4567</a>
+                <a href="mailto:kuwait@embassy.mt">✉️ kuwait@embassy.mt</a>
+            </div>
+
+            <div class="emergency-item">
+                <h3>Kuwaiti Cultural Office</h3>
+                <a href="tel:+35621234568">📞 +356 2123 4568</a>
+                <a href="mailto:cultural@ksamalta.org">✉️ cultural@ksamalta.org</a>
+            </div>
+
+            <div class="emergency-item">
+                <h3>Malta Emergency Services</h3>
+                <a href="tel:112">📞 Police/Ambulance: 112</a>
+                <a href="tel:21234100">📞 Mater Dei Hospital: 2123 4100</a>
+            </div>
+
+            <div class="emergency-item">
+                <h3>KSA Malta President</h3>
+                <a href="tel:+35679123456">📞 +356 7912 3456</a>
+                <a href="https://wa.me/35679123456">💬 WhatsApp</a>
+            </div>
+
+            <button class="btn-close-modal" onclick="hideEmergency()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase config - REPLACE WITH YOUR CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get page from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageSlug = urlParams.get('page') || 'home';
+
+        // Get language preference
+        let currentLang = localStorage.getItem('lang') || 'en';
+        applyLanguage(currentLang);
+
+        // Highlight active nav link
+        document.querySelectorAll('.site-header nav a').forEach(link => {
+            if (link.href.includes('page=' + pageSlug)) {
+                link.classList.add('active');
+            }
+        });
+
+        // Fetch and render PUBLISHED content
+        async function loadContent() {
+            try {
+                const doc = await db.collection("pages").doc(pageSlug).get();
+
+                if (doc.exists && doc.data().published) {
+                    const published = doc.data().published;
+                    const meta = doc.data().meta;
+
+                    // Update page title
+                    if (meta) {
+                        const title = currentLang === 'ar' && meta.title_ar ? meta.title_ar : meta.title;
+                        document.title = title + ' - KSA Malta';
+
+                        if (meta.description) {
+                            document.querySelector('meta[name="description"]').setAttribute('content', meta.description);
+                        }
+                    }
+
+                    // Inject CSS and HTML
+                    document.getElementById('injected-style').innerHTML = published.css || '';
+                    document.getElementById('app-root').innerHTML = published.html || '';
+
+                } else {
+                    // Page not found or not published
+                    document.getElementById('app-root').innerHTML = `
+                        <div class="error-page">
+                            <h1>404</h1>
+                            <p>Page not found or not yet published.</p>
+                            <a href="?page=home">Go to Home</a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading content:', error);
+                document.getElementById('app-root').innerHTML = `
+                    <div class="error-page">
+                        <h1>Error</h1>
+                        <p>Failed to load page content.</p>
+                        <a href="?page=home">Go to Home</a>
+                    </div>
+                `;
+            }
+
+            document.getElementById('loader').style.display = 'none';
+        }
+
+        loadContent();
+
+        // Language toggle
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            localStorage.setItem('lang', currentLang);
+            applyLanguage(currentLang);
+        }
+
+        function applyLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.querySelector('.lang-toggle').textContent = lang === 'en' ? 'العربية' : 'English';
+
+            // Update nav links and other elements
+            document.querySelectorAll('[data-lang-en]').forEach(el => {
+                el.textContent = el.getAttribute('data-lang-' + lang);
+            });
+        }
+
+        // Emergency contacts modal
+        function showEmergency() {
+            document.getElementById('emergency-modal').classList.add('active');
+        }
+
+        function hideEmergency() {
+            document.getElementById('emergency-modal').classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.getElementById('emergency-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'emergency-modal') {
+                hideEmergency();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideEmergency();
+            }
+        });
+    </script>
+</body>
+</html>

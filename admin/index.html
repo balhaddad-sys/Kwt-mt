@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - KSA Malta CMS</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+        }
+
+        /* Header */
+        .header {
+            background: #1a365d;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header .user-email {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .dashboard-header h2 {
+            font-size: 28px;
+            color: #1a365d;
+        }
+        .btn-primary {
+            background: #1a365d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: #2c5282;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .stat-card .label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a365d;
+        }
+
+        /* Pages Table */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 32px;
+        }
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a365d;
+        }
+        .card-body {
+            padding: 24px;
+        }
+        .pages-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .pages-table th {
+            text-align: left;
+            padding: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .pages-table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .pages-table tr:hover {
+            background: #f8f9fa;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-published {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-unpublished {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        .btn-edit {
+            background: #1a365d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-edit:hover {
+            background: #2c5282;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        /* Audit Log */
+        .audit-item {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+        .audit-item:last-child {
+            border-bottom: none;
+        }
+        .audit-time {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            border: 4px solid #e9ecef;
+            border-top-color: #1a365d;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #1a365d;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #1a365d;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .btn-cancel {
+            flex: 1;
+            padding: 12px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .pages-table {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🇰🇼 KSA Malta CMS</h1>
+        <div class="user-info">
+            <span class="user-email" id="user-email">Loading...</span>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h2>Content Dashboard</h2>
+            <button class="btn-primary" onclick="showCreatePageModal()">+ Create New Page</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Total Pages</div>
+                <div class="value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Published</div>
+                <div class="value" id="stat-published">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Drafts</div>
+                <div class="value" id="stat-drafts">0</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>All Pages</h3>
+            </div>
+            <div class="card-body">
+                <div id="pages-loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading pages...</p>
+                </div>
+                <div id="pages-content" style="display: none;">
+                    <table class="pages-table">
+                        <thead>
+                            <tr>
+                                <th>Page Title</th>
+                                <th>Slug</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pages-tbody"></tbody>
+                    </table>
+                </div>
+                <div id="pages-empty" class="empty-state" style="display: none;">
+                    <p>No pages yet. Create your first page to get started!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <div id="audit-loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading activity...</p>
+                </div>
+                <div id="audit-content" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Page Modal -->
+    <div id="create-modal" class="modal">
+        <div class="modal-content">
+            <h3>Create New Page</h3>
+            <form id="create-form">
+                <div class="form-group">
+                    <label for="page-title">Page Title</label>
+                    <input type="text" id="page-title" required placeholder="e.g., About Us">
+                </div>
+                <div class="form-group">
+                    <label for="page-slug">URL Slug</label>
+                    <input type="text" id="page-slug" required placeholder="e.g., about-us">
+                </div>
+                <div class="form-group">
+                    <label for="page-title-ar">Page Title (Arabic)</label>
+                    <input type="text" id="page-title-ar" placeholder="e.g., من نحن">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="hideCreatePageModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Page</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/firebase-config.js"></script>
+    <script>
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUser = null;
+        let currentUserRole = null;
+
+        // Auth check
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/admin/login.html';
+                return;
+            }
+
+            try {
+                const token = await user.getIdTokenResult();
+                if (!token.claims.role || !['admin', 'super_admin', 'editor'].includes(token.claims.role)) {
+                    await auth.signOut();
+                    window.location.href = '/admin/login.html';
+                    return;
+                }
+
+                currentUser = user;
+                currentUserRole = token.claims.role;
+                document.getElementById('user-email').textContent = user.email;
+
+                // Load dashboard data
+                loadPages();
+                loadAuditLog();
+            } catch (error) {
+                console.error('Auth error:', error);
+                window.location.href = '/admin/login.html';
+            }
+        });
+
+        // Load pages
+        async function loadPages() {
+            try {
+                const snapshot = await db.collection('pages').orderBy('meta.createdAt', 'desc').get();
+
+                if (snapshot.empty) {
+                    document.getElementById('pages-loading').style.display = 'none';
+                    document.getElementById('pages-empty').style.display = 'block';
+                    return;
+                }
+
+                const tbody = document.getElementById('pages-tbody');
+                tbody.innerHTML = '';
+
+                let totalPages = 0;
+                let publishedCount = 0;
+                let draftCount = 0;
+
+                snapshot.forEach(doc => {
+                    const page = doc.data();
+                    const slug = doc.id;
+                    totalPages++;
+
+                    // Determine status
+                    let status = 'unpublished';
+                    let statusClass = 'status-unpublished';
+                    let statusText = 'Not Published';
+
+                    if (page.published) {
+                        publishedCount++;
+                        if (page.draft && page.draft.updatedAt && page.published.publishedAt) {
+                            const draftTime = page.draft.updatedAt.toMillis();
+                            const publishedTime = page.published.publishedAt.toMillis();
+                            if (draftTime > publishedTime) {
+                                status = 'draft';
+                                statusClass = 'status-draft';
+                                statusText = 'Draft Changes';
+                                draftCount++;
+                            } else {
+                                status = 'published';
+                                statusClass = 'status-published';
+                                statusText = 'Published';
+                            }
+                        } else {
+                            status = 'published';
+                            statusClass = 'status-published';
+                            statusText = 'Published';
+                        }
+                    } else if (page.draft) {
+                        status = 'draft';
+                        statusClass = 'status-draft';
+                        statusText = 'Draft Only';
+                        draftCount++;
+                    }
+
+                    // Last updated time
+                    let lastUpdated = 'Never';
+                    if (page.draft && page.draft.updatedAt) {
+                        lastUpdated = formatDate(page.draft.updatedAt.toDate());
+                    } else if (page.published && page.published.publishedAt) {
+                        lastUpdated = formatDate(page.published.publishedAt.toDate());
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${page.meta?.title || 'Untitled'}</strong></td>
+                        <td><code>${slug}</code></td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${lastUpdated}</td>
+                        <td>
+                            <a href="/admin/editor.html?page=${slug}" class="btn-edit">Edit</a>
+                            ${currentUserRole === 'admin' || currentUserRole === 'super_admin' ?
+                              `<button class="btn-delete" onclick="deletePage('${slug}')">Delete</button>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Update stats
+                document.getElementById('stat-total').textContent = totalPages;
+                document.getElementById('stat-published').textContent = publishedCount;
+                document.getElementById('stat-drafts').textContent = draftCount;
+
+                document.getElementById('pages-loading').style.display = 'none';
+                document.getElementById('pages-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading pages:', error);
+                document.getElementById('pages-loading').innerHTML = '<p style="color: #dc3545;">Error loading pages</p>';
+            }
+        }
+
+        // Load audit log
+        async function loadAuditLog() {
+            try {
+                const snapshot = await db.collection('audit_logs')
+                    .orderBy('timestamp', 'desc')
+                    .limit(10)
+                    .get();
+
+                const content = document.getElementById('audit-content');
+                content.innerHTML = '';
+
+                if (snapshot.empty) {
+                    content.innerHTML = '<p class="empty-state">No activity yet</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const log = doc.data();
+                        const div = document.createElement('div');
+                        div.className = 'audit-item';
+                        div.innerHTML = `
+                            <div><strong>${log.userEmail}</strong> ${getActionText(log.action)} <strong>${log.pageSlug}</strong></div>
+                            <div class="audit-time">${formatDate(log.timestamp.toDate())}</div>
+                        `;
+                        content.appendChild(div);
+                    });
+                }
+
+                document.getElementById('audit-loading').style.display = 'none';
+                document.getElementById('audit-content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading audit log:', error);
+                document.getElementById('audit-loading').innerHTML = '<p style="color: #dc3545;">Error loading activity</p>';
+            }
+        }
+
+        // Create page modal
+        function showCreatePageModal() {
+            document.getElementById('create-modal').classList.add('active');
+        }
+
+        function hideCreatePageModal() {
+            document.getElementById('create-modal').classList.remove('active');
+            document.getElementById('create-form').reset();
+        }
+
+        // Create page form
+        document.getElementById('create-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('page-title').value.trim();
+            const slug = document.getElementById('page-slug').value.trim().toLowerCase();
+            const titleAr = document.getElementById('page-title-ar').value.trim();
+
+            if (!slug.match(/^[a-z0-9-]+$/)) {
+                alert('Slug can only contain lowercase letters, numbers, and hyphens');
+                return;
+            }
+
+            try {
+                // Check if slug already exists
+                const existing = await db.collection('pages').doc(slug).get();
+                if (existing.exists) {
+                    alert('A page with this slug already exists');
+                    return;
+                }
+
+                // Create the page
+                await db.collection('pages').doc(slug).set({
+                    meta: {
+                        title: title,
+                        title_ar: titleAr || title,
+                        description: '',
+                        ogImage: '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastPublishedAt: null
+                    },
+                    draft: {
+                        html: '<h1>' + title + '</h1><p>Start building your page...</p>',
+                        css: '',
+                        components: '',
+                        styles: '',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: currentUser.email
+                    }
+                });
+
+                hideCreatePageModal();
+                loadPages(); // Reload the list
+
+                // Redirect to editor
+                setTimeout(() => {
+                    window.location.href = `/admin/editor.html?page=${slug}`;
+                }, 500);
+
+            } catch (error) {
+                console.error('Error creating page:', error);
+                alert('Error creating page: ' + error.message);
+            }
+        });
+
+        // Auto-generate slug from title
+        document.getElementById('page-title').addEventListener('input', (e) => {
+            const slug = e.target.value
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+            document.getElementById('page-slug').value = slug;
+        });
+
+        // Delete page
+        async function deletePage(slug) {
+            if (!confirm(`Are you sure you want to delete the page "${slug}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                await db.collection('pages').doc(slug).delete();
+                loadPages(); // Reload the list
+            } catch (error) {
+                console.error('Error deleting page:', error);
+                alert('Error deleting page: ' + error.message);
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await auth.signOut();
+                window.location.href = '/admin/login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Error logging out');
+            }
+        }
+
+        // Helper functions
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 7) {
+                return date.toLocaleDateString();
+            } else if (days > 0) {
+                return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+            } else if (hours > 0) {
+                return hours + ' hour' + (hours > 1 ? 's' : '') + ' ago';
+            } else if (minutes > 0) {
+                return minutes + ' minute' + (minutes > 1 ? 's' : '') + ' ago';
+            } else {
+                return 'Just now';
+            }
+        }
+
+        function getActionText(action) {
+            switch (action) {
+                case 'draft_save': return 'saved draft for';
+                case 'publish': return 'published';
+                case 'rollback': return 'rolled back';
+                default: return action;
+            }
+        }
+
+        // Close modal on background click
+        document.getElementById('create-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'create-modal') {
+                hideCreatePageModal();
+            }
+        });
+    </script>
+</body>
+</html>
