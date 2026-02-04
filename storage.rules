@@ -2,6 +2,15 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
+    // ===== SITE ASSETS =====
+    // Site-wide images (hero backgrounds, logos, etc.)
+    match /site/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+                      request.auth.token.role in ['admin', 'super_admin'] &&
+                      request.resource.size < 10 * 1024 * 1024;  // 10MB limit
+    }
+
     // ===== CMS ASSETS =====
     // Assets uploaded via the visual editor
     match /cms-assets/{allPaths=**} {
