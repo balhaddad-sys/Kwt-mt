@@ -16,11 +16,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Check if Firebase CLI is installed
-if ! command -v firebase &> /dev/null; then
-    echo -e "${RED}Error: Firebase CLI not installed${NC}"
-    echo "Installing Firebase CLI..."
-    npm install -g firebase-tools
+# Ensure Firebase CLI is available (installed as devDependency)
+if ! npx firebase --version &> /dev/null; then
+    echo -e "${YELLOW}Firebase CLI not found locally. Installing dependencies...${NC}"
+    npm install
 fi
 
 echo -e "${GREEN}✓ Firebase CLI installed${NC}"
@@ -35,7 +34,7 @@ if [ -z "$FIREBASE_TOKEN" ]; then
     echo -e "${BLUE}Follow these steps:${NC}"
     echo ""
     echo "1. On your LOCAL MACHINE (with a browser), run:"
-    echo -e "   ${GREEN}firebase login:ci${NC}"
+    echo -e "   ${GREEN}npx firebase login:ci${NC}"
     echo ""
     echo "2. Complete the authentication in your browser"
     echo ""
@@ -48,7 +47,7 @@ if [ -z "$FIREBASE_TOKEN" ]; then
     echo -e "   ${GREEN}./deploy-setup.sh${NC}"
     echo ""
     echo "Or deploy directly with:"
-    echo -e "   ${GREEN}firebase deploy --token \"\$FIREBASE_TOKEN\"${NC}"
+    echo -e "   ${GREEN}npx firebase deploy --token \"\$FIREBASE_TOKEN\"${NC}"
     echo ""
     exit 1
 fi
@@ -58,7 +57,7 @@ echo ""
 
 # Verify we can access Firebase
 echo "Verifying Firebase authentication..."
-if firebase projects:list --token "$FIREBASE_TOKEN" &> /dev/null; then
+if npx firebase projects:list --token "$FIREBASE_TOKEN" &> /dev/null; then
     echo -e "${GREEN}✓ Successfully authenticated with Firebase${NC}"
 else
     echo -e "${RED}✗ Firebase authentication failed${NC}"
@@ -111,7 +110,7 @@ case $choice in
     1)
         echo ""
         echo "Deploying security rules..."
-        firebase deploy --only firestore:rules,storage --token "$FIREBASE_TOKEN"
+        npx firebase deploy --only firestore:rules,storage --token "$FIREBASE_TOKEN"
         echo -e "${GREEN}✓ Security rules deployed${NC}"
         ;;
     2)
@@ -124,10 +123,10 @@ case $choice in
         echo "Setting admin secret..."
         read -sp "Enter a strong secret for admin functions: " admin_secret
         echo ""
-        firebase functions:config:set admin.secret="$admin_secret" --token "$FIREBASE_TOKEN"
+        npx firebase functions:config:set admin.secret="$admin_secret" --token "$FIREBASE_TOKEN"
         echo ""
         echo "Deploying Cloud Functions..."
-        firebase deploy --only functions --token "$FIREBASE_TOKEN"
+        npx firebase deploy --only functions --token "$FIREBASE_TOKEN"
         echo -e "${GREEN}✓ Cloud Functions deployed${NC}"
         ;;
     3)
@@ -136,7 +135,7 @@ case $choice in
         npm run build:cms
         echo ""
         echo "Deploying to Firebase Hosting..."
-        firebase deploy --only hosting --token "$FIREBASE_TOKEN"
+        npx firebase deploy --only hosting --token "$FIREBASE_TOKEN"
         echo -e "${GREEN}✓ Hosting deployed${NC}"
         echo ""
         echo "Your site is live at: https://kwt-mt.web.app"
@@ -148,7 +147,7 @@ case $choice in
 
         # Security Rules
         echo "1/4 Deploying security rules..."
-        firebase deploy --only firestore:rules,storage --token "$FIREBASE_TOKEN"
+        npx firebase deploy --only firestore:rules,storage --token "$FIREBASE_TOKEN"
         echo -e "${GREEN}✓ Security rules deployed${NC}"
         echo ""
 
@@ -161,10 +160,10 @@ case $choice in
         echo "Setting admin secret..."
         read -sp "Enter a strong secret for admin functions: " admin_secret
         echo ""
-        firebase functions:config:set admin.secret="$admin_secret" --token "$FIREBASE_TOKEN"
+        npx firebase functions:config:set admin.secret="$admin_secret" --token "$FIREBASE_TOKEN"
         echo ""
         echo "Deploying Cloud Functions..."
-        firebase deploy --only functions --token "$FIREBASE_TOKEN"
+        npx firebase deploy --only functions --token "$FIREBASE_TOKEN"
         echo -e "${GREEN}✓ Cloud Functions deployed${NC}"
         echo ""
 
@@ -176,7 +175,7 @@ case $choice in
 
         # Hosting
         echo "4/4 Deploying to Firebase Hosting..."
-        firebase deploy --only hosting --token "$FIREBASE_TOKEN"
+        npx firebase deploy --only hosting --token "$FIREBASE_TOKEN"
         echo -e "${GREEN}✓ Hosting deployed${NC}"
         echo ""
 

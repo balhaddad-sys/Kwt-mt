@@ -13,7 +13,7 @@ if [ -z "$FIREBASE_TOKEN" ]; then
     echo "⚠️  FIREBASE_TOKEN not set"
     echo ""
     echo "Get your token:"
-    echo "  1. On LOCAL machine: firebase login:ci"
+    echo "  1. On LOCAL machine: npx firebase login:ci"
     echo "  2. Copy the token"
     echo "  3. Here: export FIREBASE_TOKEN=\"your-token\""
     echo ""
@@ -35,7 +35,7 @@ npm run build:cms
 
 # Deploy
 echo "🚀 Deploying to Firebase..."
-firebase deploy --token "$FIREBASE_TOKEN"
+npx firebase deploy --token "$FIREBASE_TOKEN"
 
 echo ""
 echo "✅ Deployment complete!"
