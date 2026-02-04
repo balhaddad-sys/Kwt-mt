@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Mail, MapPin, Phone, Send, UserPlus, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app } from '../services/firebase';
 import Section from '../components/ui/Section';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -26,24 +28,39 @@ interface MembershipFormData {
   howHeard: string;
 }
 
+const functions = getFunctions(app);
+
 export default function ContactPage() {
   const [activeTab, setActiveTab] = useState<'contact' | 'membership'>('contact');
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [membershipSubmitted, setMembershipSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const contactForm = useForm<ContactFormData>();
   const membershipForm = useForm<MembershipFormData>();
 
   const onContactSubmit = async (data: ContactFormData) => {
-    // In production, this would send to Firebase
-    console.log('Contact form:', data);
-    setContactSubmitted(true);
+    setSubmitError(null);
+    try {
+      const submitContactForm = httpsCallable(functions, 'submitContactForm');
+      await submitContactForm(data);
+      setContactSubmitted(true);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to send message. Please try again.';
+      setSubmitError(message);
+    }
   };
 
   const onMembershipSubmit = async (data: MembershipFormData) => {
-    // In production, this would send to Firebase
-    console.log('Membership form:', data);
-    setMembershipSubmitted(true);
+    setSubmitError(null);
+    try {
+      const submitMembershipApplication = httpsCallable(functions, 'submitMembershipApplication');
+      await submitMembershipApplication(data);
+      setMembershipSubmitted(true);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to submit application. Please try again.';
+      setSubmitError(message);
+    }
   };
 
   const contactInfo = [
@@ -263,6 +280,10 @@ export default function ContactPage() {
                         )}
                       </div>
 
+                      {submitError && (
+                        <p className="text-red-500 text-sm text-center">{submitError}</p>
+                      )}
+
                       <Button
                         type="submit"
                         variant="primary"
@@ -447,6 +468,10 @@ export default function ContactPage() {
                           <option value="other">Other</option>
                         </select>
                       </div>
+
+                      {submitError && (
+                        <p className="text-red-500 text-sm text-center">{submitError}</p>
+                      )}
 
                       <Button
                         type="submit"
