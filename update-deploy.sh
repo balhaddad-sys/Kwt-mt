@@ -21,7 +21,7 @@ if [ -z "$FIREBASE_TOKEN" ]; then
     echo -e "${YELLOW}Firebase authentication required${NC}"
     echo ""
     echo "Run this on your LOCAL MACHINE:"
-    echo -e "  ${GREEN}firebase login:ci${NC}"
+    echo -e "  ${GREEN}npx firebase login:ci${NC}"
     echo ""
     echo "Then set the token here:"
     echo -e "  ${GREEN}export FIREBASE_TOKEN=\"your-token\"${NC}"
@@ -36,7 +36,7 @@ echo ""
 
 # Function to deploy with token
 deploy() {
-    firebase deploy $1 --token "$FIREBASE_TOKEN"
+    npx firebase deploy $1 --token "$FIREBASE_TOKEN"
 }
 
 echo "=========================================="
@@ -60,9 +60,9 @@ fi
 cd ..
 
 # Set admin secret if not already set
-if ! firebase functions:config:get admin.secret --token "$FIREBASE_TOKEN" &> /dev/null; then
+if ! npx firebase functions:config:get admin.secret --token "$FIREBASE_TOKEN" &> /dev/null; then
     echo "  Setting admin secret..."
-    firebase functions:config:set admin.secret="ksa-malta-cms-2026-secure" --token "$FIREBASE_TOKEN"
+    npx firebase functions:config:set admin.secret="ksa-malta-cms-2026-secure" --token "$FIREBASE_TOKEN"
 fi
 
 deploy "--only functions"
