@@ -42,10 +42,10 @@ service cloud.firestore {
     }
 
     // ===== AUDIT LOGS =====
-    // Read-only audit trail
     match /audit_logs/{logId} {
       allow read: if isAdmin();
-      allow write: if false;  // Only created via server-side or special logic
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
     }
 
     // ===== SITE CONFIGURATION (public read) =====
