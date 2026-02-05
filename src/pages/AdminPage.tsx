@@ -39,7 +39,7 @@ import ContentManager from '../components/admin/ContentManager';
 import TeamManager from '../components/admin/TeamManager';
 import AdminSettings from '../components/admin/AdminSettings';
 import SiteSettings from '../components/admin/SiteSettings';
-import VisualPageBuilder from '../components/admin/VisualPageBuilder';
+import VisualPageBuilder from '../components/admin/visual-builder';
 
 type AdminTab = 'dashboard' | 'page-builder' | 'site' | 'theme' | 'media' | 'events' | 'content' | 'team' | 'settings';
 

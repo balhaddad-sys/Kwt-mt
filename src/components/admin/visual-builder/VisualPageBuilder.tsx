@@ -37,10 +37,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../../services/firebase';
-import { useAuth } from '../../contexts/AuthContext';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
+import { db } from '../../../services/firebase';
+import { useAuth } from '../../../contexts/AuthContext';
+import Card from '../../ui/Card';
+import Button from '../../ui/Button';
 
 // Section configuration interface (matches SiteSettings)
 export interface SectionConfig {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { SiteSettingsData, SectionConfig } from '../components/admin/SiteSettings';
+import { SiteSettingsData } from '../components/admin/SiteSettings';
+import { SectionConfig } from '../components/admin/visual-builder/VisualPageBuilder';
 
 // Default section configuration
 const defaultSections: SectionConfig[] = [
