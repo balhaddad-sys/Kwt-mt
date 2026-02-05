@@ -182,7 +182,6 @@ export const Audit = {
    */
   async _syncToServer() {
     // Don't attempt sync if user is not authenticated
-    // Logs are stored locally and will sync on the next attempt
     if (!auth.currentUser) return;
 
     const unsynced = localLogs

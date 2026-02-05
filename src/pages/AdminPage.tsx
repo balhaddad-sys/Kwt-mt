@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -68,6 +68,7 @@ export default function AdminPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showVisualBuilder, setShowVisualBuilder] = useState(false);
 
   // Handle tab from URL query parameter
   useEffect(() => {
@@ -338,7 +339,24 @@ export default function AdminPage() {
           </motion.div>
         );
       case 'page-builder':
-        return <VisualPageBuilder />;
+        return (
+          <div>
+            <button
+              onClick={() => setShowVisualBuilder(true)}
+              className="w-full flex items-center gap-4 mb-6 p-5 rounded-2xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 transition-all hover:border-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:shadow-lg text-left"
+            >
+              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-800 flex items-center justify-center flex-shrink-0">
+                <LayoutGrid size={24} />
+              </div>
+              <div className="flex-1">
+                <span className="font-bold text-base block">Open Visual Page Editor</span>
+                <span className="text-sm opacity-70">Drag & drop builder with Kuwaiti blocks - edit directly on the live page</span>
+              </div>
+              <ChevronRight size={24} className="opacity-50" />
+            </button>
+            <VisualPageBuilder />
+          </div>
+        );
       case 'site':
         return <SiteSettings />;
       case 'theme':
@@ -518,6 +536,43 @@ export default function AdminPage() {
           {renderContent()}
         </main>
       </div>
+
+      {/* Full-Screen Visual Builder Overlay */}
+      <AnimatePresence>
+        {showVisualBuilder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10001] bg-white dark:bg-neutral-900"
+          >
+            {/* Top Bar */}
+            <div className="h-12 bg-neutral-900 flex items-center justify-between px-4 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-primary-500/20 rounded-lg flex items-center justify-center">
+                  <LayoutGrid size={16} className="text-primary-400" />
+                </div>
+                <span className="text-white font-semibold text-sm">Visual Page Editor</span>
+              </div>
+              <button
+                onClick={() => setShowVisualBuilder(false)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg text-sm transition-colors"
+              >
+                <X size={16} />
+                <span className="hidden sm:inline">Close Editor</span>
+              </button>
+            </div>
+            {/* Iframe */}
+            <iframe
+              src="/visual-builder.html?page=home"
+              className="w-full border-none"
+              style={{ height: 'calc(100vh - 48px)' }}
+              title="Visual Page Editor"
+              allow="clipboard-read; clipboard-write"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

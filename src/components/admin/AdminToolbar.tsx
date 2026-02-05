@@ -161,6 +161,7 @@ export default function AdminToolbar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState<string | null>(null);
+  const [showVisualBuilder, setShowVisualBuilder] = useState(false);
 
   if (!isAdmin) return null;
 
@@ -345,6 +346,21 @@ export default function AdminToolbar() {
                     <span className="text-xs opacity-70 mt-0.5">Colors & style</span>
                   </button>
                 </div>
+
+                {/* Visual Editor Button */}
+                <button
+                  onClick={() => {
+                    setShowVisualBuilder(true);
+                    setIsExpanded(false);
+                  }}
+                  className="w-full flex items-center gap-3 mt-3 p-4 rounded-2xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 transition-all hover:border-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-left"
+                >
+                  <Icons.Sparkles size={28} />
+                  <div>
+                    <span className="font-semibold text-sm block">Visual Page Editor</span>
+                    <span className="text-xs opacity-70">Drag & drop builder with Kuwaiti blocks</span>
+                  </div>
+                </button>
               </div>
 
               {/* Pending Changes Section */}
@@ -492,6 +508,44 @@ export default function AdminToolbar() {
         isOpen={isThemeModalOpen}
         onClose={() => setIsThemeModalOpen(false)}
       />
+
+      {/* Full-Screen Visual Builder Overlay */}
+      <AnimatePresence>
+        {showVisualBuilder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[10001] bg-white dark:bg-gray-900"
+          >
+            {/* Top Bar */}
+            <div className="h-12 bg-gray-900 flex items-center justify-between px-4 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-gold/20 rounded-lg flex items-center justify-center">
+                  <Icons.Sparkles size={16} className="text-gold" />
+                </div>
+                <span className="text-white font-semibold text-sm">Visual Page Editor</span>
+                <span className="text-gray-400 text-xs hidden sm:inline">- Editing: {location.pathname === '/' ? 'Home' : location.pathname.replace('/', '')}</span>
+              </div>
+              <button
+                onClick={() => setShowVisualBuilder(false)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+              >
+                <Icons.X size={16} />
+                <span className="hidden sm:inline">Close Editor</span>
+              </button>
+            </div>
+            {/* Iframe */}
+            <iframe
+              src={`/visual-builder.html?page=${encodeURIComponent(location.pathname)}`}
+              className="w-full border-none"
+              style={{ height: 'calc(100vh - 48px)' }}
+              title="Visual Page Editor"
+              allow="clipboard-read; clipboard-write"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

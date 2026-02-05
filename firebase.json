@@ -31,6 +31,10 @@
         "destination": "/cms.html"
       },
       {
+        "source": "/visual-builder.html",
+        "destination": "/visual-builder.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -63,7 +67,7 @@
           },
           {
             "key": "X-Frame-Options",
-            "value": "DENY"
+            "value": "SAMEORIGIN"
           },
           {
             "key": "X-XSS-Protection",

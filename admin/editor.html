@@ -281,6 +281,7 @@
 
                 // Initialize editor
                 initializeEditor();
+                loadThemeColors();
                 loadPageData();
                 loadVersionHistory();
 
@@ -310,7 +311,7 @@
                 },
                 canvas: {
                     styles: [
-                        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+                        'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&family=Cairo:wght@300;400;500;600;700&display=swap',
                         'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap'
                     ]
                 },
@@ -374,11 +375,11 @@
                 label: 'Hero Banner',
                 category: 'KSA Malta',
                 content: `
-                    <section class="hero-banner" style="position:relative; min-height:500px; background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); display:flex; align-items:center; justify-content:center; padding: 40px 20px;">
-                        <div style="text-align:center; color:white; max-width:800px;">
-                            <h1 style="font-size:48px; font-weight:700; margin-bottom:16px; line-height: 1.2;">Welcome to Malta</h1>
-                            <p style="font-size:20px; margin-bottom:32px; opacity:0.95; line-height: 1.6;">Your guide to studying and living in Malta</p>
-                            <a href="#" style="display:inline-block; padding:16px 32px; background:#d4a853; color:#1a365d; font-weight:600; border-radius:8px; text-decoration:none; transition: transform 0.2s;">Get Started</a>
+                    <section class="hero-banner" style="position:relative; min-height:500px; background: linear-gradient(135deg, var(--color-primary-dark, #152f42) 0%, var(--color-primary, #1a3d52) 50%, var(--color-primary-light, #4a6d82) 100%); display:flex; align-items:center; justify-content:center; padding: 60px 20px;">
+                        <div style="text-align:center; color:var(--color-text-light, #ffffff); max-width:800px;">
+                            <h1 style="font-family:'Poppins',sans-serif; font-size:48px; font-weight:800; margin-bottom:16px; line-height:1.2;">Kuwaiti Student Association <span style="color:var(--color-accent, #c41e3a);">Malta</span></h1>
+                            <p style="font-size:20px; margin-bottom:32px; opacity:0.9; line-height:1.6;">Connecting Kuwaiti students in Malta</p>
+                            <a href="#" style="display:inline-block; padding:16px 32px; background:var(--color-gold, #d4a851); color:var(--color-primary-dark, #152f42); font-weight:600; border-radius:8px; text-decoration:none; font-size:16px;">Get Started</a>
                         </div>
                     </section>
                 `,
@@ -391,17 +392,17 @@
                 category: 'KSA Malta',
                 content: `
                     <div style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:350px; margin: 20px;">
-                        <div style="background:#1a365d; color:white; padding:16px; text-align:center;">
+                        <div style="background:var(--color-primary, #1a3d52); color:var(--color-text-light, #fff); padding:16px; text-align:center;">
                             <span style="display:block; font-size:14px; text-transform:uppercase; letter-spacing: 1px;">March</span>
                             <span style="display:block; font-size:36px; font-weight:700;">15</span>
                         </div>
                         <div style="padding:24px;">
-                            <h3 style="font-size:20px; font-weight:600; margin-bottom:8px; color:#1a365d;">Event Title</h3>
+                            <h3 style="font-size:20px; font-weight:600; margin-bottom:8px; color:var(--color-primary, #1a3d52);">Event Title</h3>
                             <p style="color:#6c757d; font-size:14px; margin-bottom:16px; line-height: 1.6;">
                                 📍 Location: Malta Campus<br>
                                 🕐 Time: 6:00 PM
                             </p>
-                            <a href="#" style="display:inline-block; padding:12px 24px; background:#d4a853; color:#1a365d; font-weight:500; border-radius:6px; text-decoration:none;">Register Now</a>
+                            <a href="#" style="display:inline-block; padding:12px 24px; background:var(--color-gold, #d4a851); color:var(--color-primary-dark, #152f42); font-weight:500; border-radius:6px; text-decoration:none;">Register Now</a>
                         </div>
                     </div>
                 `,
@@ -416,7 +417,7 @@
                     <div style="background:white; border-radius:12px; padding:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:flex; gap:20px; align-items:center; max-width:400px; margin: 20px;">
                         <div style="width:80px; height:80px; border-radius:50%; background:#e9ecef; display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink: 0;">👤</div>
                         <div>
-                            <h4 style="font-size:18px; font-weight:600; margin-bottom:4px; color:#1a365d;">Contact Name</h4>
+                            <h4 style="font-size:18px; font-weight:600; margin-bottom:4px; color:var(--color-primary, #1a3d52);">Contact Name</h4>
                             <p style="color:#6c757d; font-size:14px; margin-bottom:12px;">President / Vice President</p>
                             <div style="display:flex; gap:12px;">
                                 <a href="tel:+356" style="font-size:20px; text-decoration: none;">📞</a>
@@ -434,8 +435,8 @@
                 label: 'Announcement',
                 category: 'KSA Malta',
                 content: `
-                    <div style="background:#fff3cd; border-left:4px solid #d4a853; padding:20px; border-radius:0 8px 8px 0; margin: 20px 0;">
-                        <h4 style="font-size:16px; font-weight:600; color:#1a365d; margin-bottom:8px;">📢 Important Announcement</h4>
+                    <div style="background:#fff3cd; border-left:4px solid var(--color-gold, #d4a851); padding:20px; border-radius:0 8px 8px 0; margin: 20px 0;">
+                        <h4 style="font-size:16px; font-weight:600; color:var(--color-primary, #1a3d52); margin-bottom:8px;">📢 Important Announcement</h4>
                         <p style="color:#495057; font-size:14px; line-height: 1.6;">This is an important announcement for all students. Update this text with your message.</p>
                     </div>
                 `,
@@ -448,7 +449,7 @@
                 category: 'KSA Malta',
                 content: `
                     <div style="border-bottom:1px solid #e9ecef; padding:20px 0;">
-                        <h4 style="font-size:18px; font-weight:600; margin-bottom:12px; color:#1a365d;">❓ How do I apply for accommodation?</h4>
+                        <h4 style="font-size:18px; font-weight:600; margin-bottom:12px; color:var(--color-primary, #1a3d52);">❓ How do I apply for accommodation?</h4>
                         <p style="color:#495057; font-size:15px; line-height:1.6;">Answer goes here. Provide helpful information for students about the accommodation application process.</p>
                     </div>
                 `,
@@ -462,11 +463,11 @@
                 content: `
                     <div style="display:flex; gap:40px; padding:40px 20px; flex-wrap:wrap;">
                         <div style="flex:1; min-width:280px;">
-                            <h3 style="font-size:24px; font-weight:600; margin-bottom:16px; color:#1a365d;">Left Column</h3>
+                            <h3 style="font-size:24px; font-weight:600; margin-bottom:16px; color:var(--color-primary, #1a3d52);">Left Column</h3>
                             <p style="color:#495057; line-height:1.6;">Content for the left column goes here. Add text, images, or other elements.</p>
                         </div>
                         <div style="flex:1; min-width:280px;">
-                            <h3 style="font-size:24px; font-weight:600; margin-bottom:16px; color:#1a365d;">Right Column</h3>
+                            <h3 style="font-size:24px; font-weight:600; margin-bottom:16px; color:var(--color-primary, #1a3d52);">Right Column</h3>
                             <p style="color:#495057; line-height:1.6;">Content for the right column goes here. Add text, images, or other elements.</p>
                         </div>
                     </div>
@@ -479,36 +480,174 @@
                 label: 'Info Box',
                 category: 'KSA Malta',
                 content: `
-                    <div style="background:#e7f3ff; border-left:4px solid #1a365d; padding:20px; border-radius:0 8px 8px 0; margin: 20px 0;">
-                        <h4 style="font-size:16px; font-weight:600; color:#1a365d; margin-bottom:8px;">ℹ️ Information</h4>
+                    <div style="background:#e7f3ff; border-left:4px solid var(--color-primary, #1a3d52); padding:20px; border-radius:0 8px 8px 0; margin: 20px 0;">
+                        <h4 style="font-size:16px; font-weight:600; color:var(--color-primary, #1a3d52); margin-bottom:8px;">ℹ️ Information</h4>
                         <p style="color:#495057; font-size:14px; line-height: 1.6;">Helpful information or tips for students can go here.</p>
                     </div>
                 `,
                 media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>'
             });
+
+            // === Kuwaiti Tools Category ===
+
+            // Prayer Times Widget
+            blockManager.add('prayer-widget', {
+                label: '🕌 Prayer Times',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="background:#2c3e50; color:white; padding:20px; border-radius:10px; text-align:center; max-width:400px; margin:20px auto;">
+                        <h3 style="margin-top:0; margin-bottom:12px; font-size:20px;">🕌 Prayer Times (Malta)</h3>
+                        <iframe src="https://timesprayer.com/widgets.php?frame=2&lang=en&name=valletta&avt=1&fcolor=2C3E50&scolor=F1C40F"
+                            style="border:none; overflow:hidden; width:100%; height:200px;">
+                        </iframe>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>'
+            });
+
+            // Emergency Button
+            blockManager.add('emergency-btn', {
+                label: '🚨 Emergency Button',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="text-align:center; margin:20px 0;">
+                        <a href="tel:+35621234567" style="background:#c0392b; color:white; font-size:18px; font-weight:bold; padding:15px 30px; border-radius:50px; text-decoration:none; box-shadow:0 4px 15px rgba(192, 57, 43, 0.4); display:inline-block;">
+                            📞 Contact Embassy Emergency
+                        </a>
+                        <p style="font-size:12px; color:#c0392b; margin-top:8px;">Click only in urgent cases</p>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>'
+            });
+
+            // Diwaniya Card
+            blockManager.add('diwaniya-card', {
+                label: '☕ Diwaniya Card',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="border:1px solid #ddd; border-radius:12px; overflow:hidden; max-width:350px; margin:20px; background:white; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="height:160px; background: linear-gradient(135deg, #1a365d, #2c5282); display:flex; align-items:center; justify-content:center;">
+                            <span style="font-size:64px;">☕</span>
+                        </div>
+                        <div style="padding:20px;">
+                            <span style="background:#d4a853; color:#1a365d; padding:3px 10px; border-radius:4px; font-size:12px; font-weight:bold;">DIWANIYA</span>
+                            <h3 style="margin:12px 0 8px; color:#1a365d; font-size:20px;">Weekly Diwaniya Gathering</h3>
+                            <p style="color:#666; font-size:14px; line-height:1.6;">Join us for coffee, conversation, and community at the Student Hub every Thursday evening.</p>
+                            <a href="#" style="display:block; text-align:center; background:#1a365d; color:white; padding:12px; text-decoration:none; border-radius:8px; margin-top:16px; font-weight:600;">RSVP Now</a>
+                        </div>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M2 21v-2h18v2H2zm2-4v-3q0-1.525.713-2.863T6.7 8.95 9.05 7.7 12 7q1.525 0 2.863.7T17.05 8.95t1.238 2.188T19 14v3H4zm16 0h2v-3q0-.575-.15-1.113t-.425-1.012q.575.175 1.075.463T23.275 12q.375.375.55.85T24 13.85V17h-4z"/></svg>'
+            });
+
+            // WhatsApp Group Link
+            blockManager.add('whatsapp-link', {
+                label: '💬 WhatsApp Group',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="text-align:center; margin:20px 0;">
+                        <a href="https://chat.whatsapp.com/YOUR_LINK" target="_blank" style="background:#25D366; color:white; font-size:16px; font-weight:bold; padding:14px 28px; border-radius:50px; text-decoration:none; display:inline-block; box-shadow:0 4px 15px rgba(37, 211, 102, 0.3);">
+                            💬 Join Our WhatsApp Group
+                        </a>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2z"/></svg>'
+            });
         }
 
         // Add custom CSS to editor
         function addCustomStyles() {
-            // Add base CSS to the canvas
+            // Add base CSS to the canvas matching the live site
             const css = `
+                :root {
+                    --color-primary: #1a3d52;
+                    --color-secondary: #00a89c;
+                    --color-accent: #c41e3a;
+                    --color-gold: #d4a851;
+                    --color-background: #f5f5f5;
+                    --color-text: #1a1a1a;
+                    --color-text-light: #ffffff;
+                    --color-primary-light: #4a6d82;
+                    --color-primary-dark: #152f42;
+                    --color-secondary-light: #33b9af;
+                    --color-secondary-dark: #00867d;
+                }
                 * {
                     box-sizing: border-box;
                 }
                 body {
                     margin: 0;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-                    color: #212529;
+                    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+                    color: var(--color-text);
                     line-height: 1.6;
+                    background-color: var(--color-background);
+                }
+                h1, h2, h3, h4, h5, h6 {
+                    font-family: 'Poppins', 'Inter', sans-serif;
+                    font-weight: 700;
                 }
                 a {
                     transition: opacity 0.2s, transform 0.2s;
+                    text-decoration: none;
                 }
                 a:hover {
                     opacity: 0.9;
                 }
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                section {
+                    padding: 60px 20px;
+                }
+                .container {
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 0 16px;
+                }
             `;
             editor.setStyle(css);
+        }
+
+        // Load theme colors from Firestore and inject into canvas
+        async function loadThemeColors() {
+            try {
+                const doc = await db.collection('admin').doc('theme').get();
+                if (doc.exists && doc.data().colors) {
+                    const colors = doc.data().colors;
+                    const varMap = {
+                        primary: '--color-primary',
+                        secondary: '--color-secondary',
+                        accent: '--color-accent',
+                        gold: '--color-gold',
+                        background: '--color-background',
+                        text: '--color-text',
+                        textLight: '--color-text-light'
+                    };
+
+                    // Inject overrides into the canvas iframe
+                    const frame = editor.Canvas.getFrameEl();
+                    if (frame && frame.contentDocument) {
+                        let styleEl = frame.contentDocument.getElementById('ksa-theme-vars');
+                        if (!styleEl) {
+                            styleEl = frame.contentDocument.createElement('style');
+                            styleEl.id = 'ksa-theme-vars';
+                            frame.contentDocument.head.appendChild(styleEl);
+                        }
+                        let cssVars = ':root {\n';
+                        for (const [key, varName] of Object.entries(varMap)) {
+                            if (colors[key]) {
+                                cssVars += `  ${varName}: ${colors[key]};\n`;
+                            }
+                        }
+                        cssVars += '}';
+                        styleEl.textContent = cssVars;
+                        console.log('[Editor] Theme colors loaded from Firestore');
+                    }
+                }
+            } catch (error) {
+                console.warn('[Editor] Could not load theme colors:', error.message);
+            }
         }
 
         // Load page data from Firestore
