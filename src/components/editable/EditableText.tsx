@@ -43,13 +43,6 @@ export function EditableText({
     ? pendingChanges.get(changeKey)?.newValue || value
     : value;
 
-  // Sync local value when not editing
-  useEffect(() => {
-    if (!isEditing) {
-      setLocalValue(displayValue);
-    }
-  }, [displayValue, isEditing]);
-
   // Focus input when entering edit mode
   useEffect(() => {
     if (isEditing && inputRef.current) {

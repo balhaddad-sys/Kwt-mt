@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -17,7 +17,6 @@ import {
   Moon,
   Sun,
   Globe,
-  BarChart3,
   TrendingUp,
   Clock,
   Bell,
@@ -37,7 +36,6 @@ import MediaManager from '../components/admin/MediaManager';
 import EventManager from '../components/admin/EventManager';
 import ContentManager from '../components/admin/ContentManager';
 import TeamManager from '../components/admin/TeamManager';
-import AdminSettings from '../components/admin/AdminSettings';
 import SiteSettings from '../components/admin/SiteSettings';
 import VisualPageBuilder from '../components/admin/VisualPageBuilder';
 
@@ -62,20 +60,14 @@ const tabs: TabConfig[] = [
 ];
 
 export default function AdminPage() {
-  const { isAdmin, loading, currentUser, signOut } = useAuth();
+  const { loading, currentUser, signOut } = useAuth();
   const { toggleTheme, actualTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') as AdminTab | null;
+  const initialTab = tabParam && tabs.some(t => t.id === tabParam) ? tabParam : 'dashboard';
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Handle tab from URL query parameter
-  useEffect(() => {
-    const tabParam = searchParams.get('tab') as AdminTab | null;
-    if (tabParam && tabs.some(t => t.id === tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, [searchParams]);
 
   // Loading state
   if (loading) {

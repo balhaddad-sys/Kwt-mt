@@ -4,7 +4,6 @@ import {
   Image as ImageIcon,
   Trash2,
   Search,
-  Filter,
   Grid,
   List,
   X,
@@ -30,7 +29,6 @@ import {
   onSnapshot,
   query,
   orderBy,
-  where,
   Timestamp,
 } from 'firebase/firestore';
 import { storage, db } from '../../services/firebase';

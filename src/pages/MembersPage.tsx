@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Search, Users, GraduationCap, Building } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Section, { SectionHeader } from '../components/ui/Section';
+import Section from '../components/ui/Section';
 import MemberCard from '../components/common/MemberCard';
-import Card from '../components/ui/Card';
 import { mockMembers, mockStatistics } from '../data/mockData';
 
 export default function MembersPage() {

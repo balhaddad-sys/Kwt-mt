@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { doc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 import { useAuth } from './AuthContext';
@@ -141,7 +141,7 @@ export function EditProvider({ children }: { children: React.ReactNode }) {
       const documentChanges = new Map<string, { collection: string; documentId: string; changes: Record<string, unknown> }>();
 
       // Process text changes
-      for (const [key, change] of pendingChanges) {
+      for (const [, change] of pendingChanges) {
         const docKey = `${change.collection}:${change.documentId}`;
 
         if (!documentChanges.has(docKey)) {

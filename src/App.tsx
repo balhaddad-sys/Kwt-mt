@@ -19,13 +19,13 @@ import AdminPage from './pages/AdminPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Advanced Features (MedWard Pro Addendum)
-// @ts-ignore
+// @ts-expect-error - JS module without type declarations
 import { Privacy } from './utils/privacy.js';
-// @ts-ignore
+// @ts-expect-error - JS module without type declarations
 import { Theme as ThemeManager } from './utils/theme.js';
-// @ts-ignore
+// @ts-expect-error - JS module without type declarations
 import { Audit } from './services/audit.service.js';
-// @ts-ignore
+// @ts-expect-error - JS module without type declarations
 import { initTaskTypeaheads } from './ui/components/task-typeahead.js';
 
 function App() {

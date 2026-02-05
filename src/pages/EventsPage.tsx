@@ -1,13 +1,11 @@
 import { useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Search, Filter, Calendar, Grid3X3, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Calendar, Grid3X3, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   format,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
-  isSameMonth,
   isSameDay,
   addMonths,
   subMonths,
@@ -37,13 +35,13 @@ const categories: { value: EventCategory | 'all'; label: string }[] = [
 ];
 
 export default function EventsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<EventCategory | 'all'>('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // Current time for comparisons
   const now = new Date();
 
   const filteredEvents = useMemo(() => {

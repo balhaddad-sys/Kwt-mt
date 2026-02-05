@@ -1,18 +1,15 @@
 import { useState, useMemo } from 'react';
-import { X, ChevronLeft, ChevronRight, Search, Image, Heart, Download, Plus, Upload } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Search, Image, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Section from '../components/ui/Section';
 import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
 import { EditableText } from '../components/editable';
-import { useEdit } from '../contexts/EditContext';
 import { mockGalleryImages, mockAlbums } from '../data/mockData';
 import { GalleryImage } from '../types';
 
 type ViewMode = 'all' | 'albums';
 
 export default function GalleryPage() {
-  const { isEditMode } = useEdit();
   const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);

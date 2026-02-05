@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Plus, Trash2, Linkedin, Instagram, Twitter, Mail } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { motion } from 'framer-motion';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import Section, { SectionHeader } from '../components/ui/Section';
 import Button from '../components/ui/Button';
@@ -14,9 +14,8 @@ import { mockTeamMembers } from '../data/mockData';
 
 export default function TeamPage() {
   const { isEditMode } = useEdit();
-  const { isAdmin } = useAuth();
+  useAuth(); // For auth state
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
-  const [showAddModal, setShowAddModal] = useState(false);
 
   // Load team members from Firestore
   useEffect(() => {

@@ -296,11 +296,9 @@ function SortableSectionItem({
 
 // Drag Overlay Component
 function DragOverlayContent({
-  section,
   preview,
   isCompact,
 }: {
-  section: SectionConfig;
   preview: SectionPreview;
   isCompact: boolean;
 }) {
@@ -666,7 +664,6 @@ export default function VisualPageBuilder() {
           <DragOverlay>
             {activeSection && sectionPreviews[activeSection.id] ? (
               <DragOverlayContent
-                section={activeSection}
                 preview={sectionPreviews[activeSection.id]}
                 isCompact={isCompact}
               />

@@ -9,7 +9,6 @@ import {
   Check,
   AlertCircle,
   X,
-  Key,
   Activity,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,7 +22,6 @@ import {
   query,
   orderBy,
   Timestamp,
-  where,
   limit,
 } from 'firebase/firestore';
 import { db } from '../../services/firebase';

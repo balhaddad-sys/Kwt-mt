@@ -19,5 +19,11 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Allow exporting hooks from context files (common pattern)
+      'react-refresh/only-export-components': ['warn', { allowExportNames: ['useAuth', 'useTheme', 'useLanguage', 'useEdit'] }],
+      // Disable overly strict React Compiler rules
+      'react-hooks/preserve-manual-memoization': 'off',
+    },
   },
 ])

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   FileText,
   Save,
-  Eye,
   RotateCcw,
   Check,
   AlertCircle,
@@ -15,13 +14,10 @@ import {
   doc,
   getDoc,
   setDoc,
-  collection,
-  getDocs,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { PageContent } from '../../types';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
@@ -116,7 +112,6 @@ export default function ContentManager() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeLanguage, setActiveLanguage] = useState<Language>('en');
-  const [previewMode, setPreviewMode] = useState(false);
 
   // Fetch content from Firestore
   useEffect(() => {
