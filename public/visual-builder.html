@@ -763,20 +763,45 @@
             }
         });
 
+        // Helper: check role from custom claims first, then Firestore fallback
+        const ALLOWED_ROLES = ['admin', 'super_admin', 'editor'];
+
+        async function getUserRole(user) {
+            // 1. Check custom claims first
+            try {
+                const token = await user.getIdTokenResult();
+                if (token.claims.role && ALLOWED_ROLES.includes(token.claims.role)) {
+                    return token.claims.role;
+                }
+            } catch (e) {
+                console.error('Claims check error:', e);
+            }
+
+            // 2. Fallback: check Firestore users collection
+            try {
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                if (userDoc.exists) {
+                    const role = userDoc.data().role;
+                    if (role && ALLOWED_ROLES.includes(role)) {
+                        return role;
+                    }
+                }
+            } catch (e) {
+                console.error('Firestore role check error:', e);
+            }
+
+            return null;
+        }
+
         // Also auto-detect if user is already signed in
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                try {
-                    const token = await user.getIdTokenResult();
-                    if (token.claims.role && ['admin', 'super_admin', 'editor'].includes(token.claims.role)) {
-                        currentUser = user;
-                        currentUserRole = token.claims.role;
-                        // Show edit button with active indicator
-                        document.getElementById('admin-toggle').style.background = '#28a745';
-                        document.getElementById('admin-toggle').title = 'Edit Website (Logged in as ' + user.email + ')';
-                    }
-                } catch (e) {
-                    console.error('Auth check error:', e);
+                const role = await getUserRole(user);
+                if (role) {
+                    currentUser = user;
+                    currentUserRole = role;
+                    document.getElementById('admin-toggle').style.background = '#28a745';
+                    document.getElementById('admin-toggle').title = 'Edit Website (Logged in as ' + user.email + ')';
                 }
             }
         });
@@ -798,9 +823,9 @@
             try {
                 const provider = new firebase.auth.GoogleAuthProvider();
                 const result = await auth.signInWithPopup(provider);
-                const token = await result.user.getIdTokenResult();
+                const role = await getUserRole(result.user);
 
-                if (!token.claims.role || !['admin', 'super_admin', 'editor'].includes(token.claims.role)) {
+                if (!role) {
                     errorEl.textContent = 'You do not have editor permissions.';
                     errorEl.style.display = 'block';
                     await auth.signOut();
@@ -808,7 +833,7 @@
                 }
 
                 currentUser = result.user;
-                currentUserRole = token.claims.role;
+                currentUserRole = role;
                 hideLoginModal();
                 activateEditor();
 
@@ -833,9 +858,9 @@
 
             try {
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const token = await userCredential.user.getIdTokenResult();
+                const role = await getUserRole(userCredential.user);
 
-                if (!token.claims.role || !['admin', 'super_admin', 'editor'].includes(token.claims.role)) {
+                if (!role) {
                     errorEl.textContent = 'You do not have editor permissions.';
                     errorEl.style.display = 'block';
                     await auth.signOut();
@@ -843,7 +868,7 @@
                 }
 
                 currentUser = userCredential.user;
-                currentUserRole = token.claims.role;
+                currentUserRole = role;
                 hideLoginModal();
                 activateEditor();
 
