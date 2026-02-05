@@ -486,6 +486,72 @@
                 `,
                 media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>'
             });
+
+            // === Kuwaiti Tools Category ===
+
+            // Prayer Times Widget
+            blockManager.add('prayer-widget', {
+                label: '🕌 Prayer Times',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="background:#2c3e50; color:white; padding:20px; border-radius:10px; text-align:center; max-width:400px; margin:20px auto;">
+                        <h3 style="margin-top:0; margin-bottom:12px; font-size:20px;">🕌 Prayer Times (Malta)</h3>
+                        <iframe src="https://timesprayer.com/widgets.php?frame=2&lang=en&name=valletta&avt=1&fcolor=2C3E50&scolor=F1C40F"
+                            style="border:none; overflow:hidden; width:100%; height:200px;">
+                        </iframe>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>'
+            });
+
+            // Emergency Button
+            blockManager.add('emergency-btn', {
+                label: '🚨 Emergency Button',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="text-align:center; margin:20px 0;">
+                        <a href="tel:+35621234567" style="background:#c0392b; color:white; font-size:18px; font-weight:bold; padding:15px 30px; border-radius:50px; text-decoration:none; box-shadow:0 4px 15px rgba(192, 57, 43, 0.4); display:inline-block;">
+                            📞 Contact Embassy Emergency
+                        </a>
+                        <p style="font-size:12px; color:#c0392b; margin-top:8px;">Click only in urgent cases</p>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>'
+            });
+
+            // Diwaniya Card
+            blockManager.add('diwaniya-card', {
+                label: '☕ Diwaniya Card',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="border:1px solid #ddd; border-radius:12px; overflow:hidden; max-width:350px; margin:20px; background:white; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="height:160px; background: linear-gradient(135deg, #1a365d, #2c5282); display:flex; align-items:center; justify-content:center;">
+                            <span style="font-size:64px;">☕</span>
+                        </div>
+                        <div style="padding:20px;">
+                            <span style="background:#d4a853; color:#1a365d; padding:3px 10px; border-radius:4px; font-size:12px; font-weight:bold;">DIWANIYA</span>
+                            <h3 style="margin:12px 0 8px; color:#1a365d; font-size:20px;">Weekly Diwaniya Gathering</h3>
+                            <p style="color:#666; font-size:14px; line-height:1.6;">Join us for coffee, conversation, and community at the Student Hub every Thursday evening.</p>
+                            <a href="#" style="display:block; text-align:center; background:#1a365d; color:white; padding:12px; text-decoration:none; border-radius:8px; margin-top:16px; font-weight:600;">RSVP Now</a>
+                        </div>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M2 21v-2h18v2H2zm2-4v-3q0-1.525.713-2.863T6.7 8.95 9.05 7.7 12 7q1.525 0 2.863.7T17.05 8.95t1.238 2.188T19 14v3H4zm16 0h2v-3q0-.575-.15-1.113t-.425-1.012q.575.175 1.075.463T23.275 12q.375.375.55.85T24 13.85V17h-4z"/></svg>'
+            });
+
+            // WhatsApp Group Link
+            blockManager.add('whatsapp-link', {
+                label: '💬 WhatsApp Group',
+                category: 'Kuwaiti Tools',
+                content: `
+                    <div style="text-align:center; margin:20px 0;">
+                        <a href="https://chat.whatsapp.com/YOUR_LINK" target="_blank" style="background:#25D366; color:white; font-size:16px; font-weight:bold; padding:14px 28px; border-radius:50px; text-decoration:none; display:inline-block; box-shadow:0 4px 15px rgba(37, 211, 102, 0.3);">
+                            💬 Join Our WhatsApp Group
+                        </a>
+                    </div>
+                `,
+                media: '<svg style="width:48px;height:48px" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2z"/></svg>'
+            });
         }
 
         // Add custom CSS to editor
