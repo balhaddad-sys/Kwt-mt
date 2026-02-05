@@ -48,6 +48,13 @@ service cloud.firestore {
       allow write: if false;  // Only created via server-side or special logic
     }
 
+    // ===== SITE SETTINGS =====
+    // Admin-only write for site configuration (page layout, etc.)
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ===== EXISTING APP COLLECTIONS =====
     // Events collection
     match /events/{eventId} {

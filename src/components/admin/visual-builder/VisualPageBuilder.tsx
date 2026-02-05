@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -34,21 +34,33 @@ import {
   ChevronRight,
   Move,
   Info,
+  ShieldAlert,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../services/firebase';
 import { useAuth } from '../../../contexts/AuthContext';
 import Card from '../../ui/Card';
 import Button from '../../ui/Button';
+import {
+  type SectionConfig,
+  defaultSections,
+  normalizeSections,
+  sectionsEqual,
+} from '../../../utils/normalizeSections';
 
-// Section configuration interface (matches SiteSettings)
-export interface SectionConfig {
-  id: string;
-  label: string;
-  visible: boolean;
-  order: number;
-}
+// Re-export for backward compatibility
+export type { SectionConfig };
+
+// Constants
+const SETTINGS_DOC_PATH = { col: 'settings', id: 'site' } as const;
+const SCHEMA_VERSION = 1;
+
+// Loading state discriminated union
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'ready' }
+  | { status: 'error'; message: string };
 
 // Section preview data for visual representation
 interface SectionPreview {
@@ -135,19 +147,6 @@ const sectionPreviews: Record<string, SectionPreview> = {
     previewHeight: 'h-20',
   },
 };
-
-// Default sections
-const defaultSections: SectionConfig[] = [
-  { id: 'hero', label: 'Hero Banner', visible: true, order: 0 },
-  { id: 'announcements', label: 'Announcements', visible: true, order: 1 },
-  { id: 'stats', label: 'Statistics', visible: true, order: 2 },
-  { id: 'about', label: 'About Section', visible: true, order: 3 },
-  { id: 'featured-events', label: 'Featured Events', visible: true, order: 4 },
-  { id: 'upcoming-events', label: 'Upcoming Events', visible: true, order: 5 },
-  { id: 'why-join', label: 'Why Join Us', visible: true, order: 6 },
-  { id: 'cta', label: 'Call to Action', visible: true, order: 7 },
-  { id: 'gallery', label: 'Gallery Preview', visible: true, order: 8 },
-];
 
 // Sortable Section Item Component
 interface SortableSectionItemProps {
@@ -334,21 +333,40 @@ function DragOverlayContent({
 
 // Main Visual Page Builder Component
 export default function VisualPageBuilder() {
-  const { currentUser } = useAuth();
-  const [sections, setSections] = useState<SectionConfig[]>(defaultSections);
-  const [originalSections, setOriginalSections] =
+  const { currentUser, isAdmin } = useAuth();
+
+  // --- State: remote vs draft ---
+  const [remoteSections, setRemoteSections] =
     useState<SectionConfig[]>(defaultSections);
-  const [loading, setLoading] = useState(true);
+  const [draftSections, setDraftSections] =
+    useState<SectionConfig[]>(defaultSections);
+  const dirtyRef = useRef(false);
+
+  // --- Loading, saving, feedback ---
+  const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // --- Conflict detection ---
+  const [remoteChangedWhileDirty, setRemoteChangedWhileDirty] = useState(false);
+
+  // --- DnD state ---
   const [activeId, setActiveId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('mobile');
 
-  // Sort sections by order
+  // Derived: has unsaved changes
+  const hasChanges = !sectionsEqual(draftSections, remoteSections);
+
+  // Keep dirtyRef in sync so the onSnapshot callback can read it without stale closures
+  useEffect(() => {
+    dirtyRef.current = hasChanges;
+  }, [hasChanges]);
+
+  // Sort draft sections by order for rendering
   const sortedSections = useMemo(
-    () => [...sections].sort((a, b) => a.order - b.order),
-    [sections]
+    () => [...draftSections].sort((a, b) => a.order - b.order),
+    [draftSections]
   );
 
   // Configure sensors for drag and drop
@@ -369,32 +387,31 @@ export default function VisualPageBuilder() {
     })
   );
 
-  // Fetch settings from Firebase
+  // --- Realtime sync with Firestore ---
   useEffect(() => {
-    const fetchSettings = async () => {
-      setLoading(true);
-      try {
-        const settingsDoc = await getDoc(doc(db, 'settings', 'site'));
-        if (settingsDoc.exists()) {
-          const data = settingsDoc.data();
-          if (data.sections && Array.isArray(data.sections)) {
-            setSections(data.sections);
-            setOriginalSections(data.sections);
-          }
+    const ref = doc(db, SETTINGS_DOC_PATH.col, SETTINGS_DOC_PATH.id);
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const data = snap.exists() ? snap.data() : null;
+        const normalized = normalizeSections(data?.sections);
+        setRemoteSections(normalized);
+
+        if (!dirtyRef.current) {
+          // No local edits — keep draft in sync
+          setDraftSections(normalized);
+        } else {
+          // Show "someone else updated" banner
+          setRemoteChangedWhileDirty(true);
         }
-      } catch (err) {
-        console.error('Error fetching settings:', err);
-        setError('Failed to load page layout');
-      } finally {
-        setLoading(false);
+        setLoadState({ status: 'ready' });
+      },
+      () => {
+        setLoadState({ status: 'error', message: 'Failed to load page layout' });
       }
-    };
-
-    fetchSettings();
+    );
+    return () => unsub();
   }, []);
-
-  // Check for changes
-  const hasChanges = JSON.stringify(sections) !== JSON.stringify(originalSections);
 
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
@@ -407,11 +424,12 @@ export default function VisualPageBuilder() {
     setActiveId(null);
 
     if (over && active.id !== over.id) {
-      setSections((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+      setDraftSections((items) => {
+        const sorted = [...items].sort((a, b) => a.order - b.order);
+        const oldIndex = sorted.findIndex((item) => item.id === active.id);
+        const newIndex = sorted.findIndex((item) => item.id === over.id);
 
-        const reordered = arrayMove(items, oldIndex, newIndex);
+        const reordered = arrayMove(sorted, oldIndex, newIndex);
         // Update order values
         return reordered.map((item, index) => ({
           ...item,
@@ -425,7 +443,7 @@ export default function VisualPageBuilder() {
 
   // Toggle section visibility
   const handleToggleVisibility = (sectionId: string) => {
-    setSections((prev) =>
+    setDraftSections((prev) =>
       prev.map((section) =>
         section.id === sectionId
           ? { ...section, visible: !section.visible }
@@ -444,18 +462,19 @@ export default function VisualPageBuilder() {
     setError(null);
 
     try {
-      // Get existing settings first
-      const settingsDoc = await getDoc(doc(db, 'settings', 'site'));
-      const existingData = settingsDoc.exists() ? settingsDoc.data() : {};
+      await setDoc(
+        doc(db, SETTINGS_DOC_PATH.col, SETTINGS_DOC_PATH.id),
+        {
+          sections: normalizeSections(draftSections),
+          _schemaVersion: SCHEMA_VERSION,
+          _lastUpdated: serverTimestamp(),
+          _updatedBy: currentUser.uid,
+        },
+        { merge: true }
+      );
 
-      await setDoc(doc(db, 'settings', 'site'), {
-        ...existingData,
-        sections: sections,
-        _lastUpdated: Timestamp.now(),
-        _updatedBy: currentUser.uid,
-      });
-
-      setOriginalSections(sections);
+      // remoteSections updates automatically via the onSnapshot listener
+      setRemoteChangedWhileDirty(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -468,10 +487,18 @@ export default function VisualPageBuilder() {
 
   // Reset changes
   const handleReset = () => {
-    if (window.confirm('Discard all changes and restore the original layout?')) {
-      setSections(originalSections);
-      setError(null);
+    if (hasChanges) {
+      if (
+        !window.confirm(
+          'Discard all changes and restore the latest saved layout?'
+        )
+      ) {
+        return;
+      }
     }
+    setDraftSections(remoteSections);
+    setRemoteChangedWhileDirty(false);
+    setError(null);
   };
 
   // Get active section for drag overlay
@@ -479,7 +506,25 @@ export default function VisualPageBuilder() {
     ? sortedSections.find((s) => s.id === activeId)
     : null;
 
-  if (loading) {
+  // --- Non-admin guard ---
+  if (!isAdmin) {
+    return (
+      <Card hover={false} className="max-w-md mx-auto mt-12">
+        <div className="p-8 text-center">
+          <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+            Admin Access Required
+          </h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            You need administrator privileges to manage the page layout.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  // --- Loading state ---
+  if (loadState.status === 'loading') {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
@@ -487,6 +532,23 @@ export default function VisualPageBuilder() {
           <p className="text-neutral-500">Loading page layout...</p>
         </div>
       </div>
+    );
+  }
+
+  // --- Error state (initial load failure) ---
+  if (loadState.status === 'error') {
+    return (
+      <Card hover={false} className="max-w-md mx-auto mt-12">
+        <div className="p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+            Failed to Load
+          </h2>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {loadState.message}
+          </p>
+        </div>
+      </Card>
     );
   }
 
@@ -576,6 +638,19 @@ export default function VisualPageBuilder() {
           </div>
         </div>
       </div>
+
+      {/* Conflict Banner */}
+      {remoteChangedWhileDirty && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-700 dark:text-amber-300 text-sm flex items-center gap-2"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          Someone updated the layout while you have unsaved changes. Save to
+          overwrite, or Reset to pull latest.
+        </motion.div>
+      )}
 
       {/* Error Message */}
       {error && (
