@@ -345,6 +345,18 @@ export default function AdminToolbar() {
                     <span className="text-xs opacity-70 mt-0.5">Colors & style</span>
                   </button>
                 </div>
+
+                {/* Visual Editor Button */}
+                <a
+                  href="/visual-builder.html"
+                  className="flex items-center gap-3 mt-3 p-4 rounded-2xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 transition-all hover:border-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                >
+                  <Icons.Sparkles size={28} />
+                  <div>
+                    <span className="font-semibold text-sm block">Visual Page Editor</span>
+                    <span className="text-xs opacity-70">Drag & drop builder with Kuwaiti blocks</span>
+                  </div>
+                </a>
               </div>
 
               {/* Pending Changes Section */}

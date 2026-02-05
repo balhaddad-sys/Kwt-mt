@@ -338,7 +338,24 @@ export default function AdminPage() {
           </motion.div>
         );
       case 'page-builder':
-        return <VisualPageBuilder />;
+        return (
+          <div>
+            <a
+              href="/visual-builder.html"
+              className="flex items-center gap-4 mb-6 p-5 rounded-2xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 transition-all hover:border-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:shadow-lg"
+            >
+              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-800 flex items-center justify-center flex-shrink-0">
+                <LayoutGrid size={24} />
+              </div>
+              <div className="flex-1">
+                <span className="font-bold text-base block">Open Visual Page Editor</span>
+                <span className="text-sm opacity-70">Drag & drop builder with Kuwaiti blocks - edit directly on the live page</span>
+              </div>
+              <ChevronRight size={24} className="opacity-50" />
+            </a>
+            <VisualPageBuilder />
+          </div>
+        );
       case 'site':
         return <SiteSettings />;
       case 'theme':
