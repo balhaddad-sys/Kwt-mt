@@ -181,6 +181,10 @@ export const Audit = {
    * Sync logs to server
    */
   async _syncToServer() {
+    // Don't attempt sync if user is not authenticated
+    // Logs are stored locally and will sync on the next attempt
+    if (!auth.currentUser) return;
+
     const unsynced = localLogs
       .filter(e => !e.synced)
       .slice(0, SYNC_BATCH_SIZE);
