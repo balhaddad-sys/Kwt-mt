@@ -24,13 +24,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
-// Section configuration
-export interface SectionConfig {
-  id: string;
-  label: string;
-  visible: boolean;
-  order: number;
-}
+// Re-export SectionConfig from the shared visual-builder types
+export type { SectionConfig } from './visual-builder/types';
 
 export interface SiteSettingsData {
   // Hero Section
