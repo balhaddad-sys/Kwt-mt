@@ -48,6 +48,19 @@ service cloud.firestore {
       allow write: if false;  // Only created via server-side or special logic
     }
 
+    // ===== SITE CONFIGURATION (public read) =====
+    // Theme colors (admin/theme)
+    match /admin/theme {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Site settings (settings/site)
+    match /settings/site {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ===== EXISTING APP COLLECTIONS =====
     // Events collection
     match /events/{eventId} {
