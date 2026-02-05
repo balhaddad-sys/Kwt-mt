@@ -31,6 +31,10 @@
         "destination": "/cms.html"
       },
       {
+        "source": "/visual-builder.html",
+        "destination": "/visual-builder.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

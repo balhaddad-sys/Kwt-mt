@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuwaiti Students Association - Malta</title>
+    <meta name="description" content="Official website of the Kuwaiti Students Association in Malta">
+
+    <!-- GrapesJS (loaded but inactive until edit mode) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/grapesjs/0.21.2/css/grapes.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/grapesjs/0.21.2/grapes.min.js"></script>
+    <script src="https://unpkg.com/grapesjs-preset-webpage@1.0.2"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome (for GrapesJS toolbar icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --color-primary: #1a365d;
+            --color-accent: #d4a853;
+            --color-text: #212529;
+            --color-muted: #6c757d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        [dir="rtl"] body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        /* ===== LOADER ===== */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e9ecef;
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== SITE HEADER ===== */
+        .site-header {
+            background: var(--color-primary);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .site-header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .site-header nav {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .site-header nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            padding: 4px 0;
+        }
+
+        .site-header nav a:hover,
+        .site-header nav a.active {
+            opacity: 1;
+            border-bottom: 2px solid var(--color-accent);
+        }
+
+        .lang-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .lang-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        #site-content {
+            min-height: 60vh;
+        }
+
+        /* ===== FOOTER ===== */
+        .site-footer {
+            background: #f8f9fa;
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 14px;
+            margin-top: 60px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .site-footer p { margin-bottom: 8px; }
+
+        .site-footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .site-footer a:hover { text-decoration: underline; }
+
+        /* ===== EDIT MODE TOGGLE BUTTON ===== */
+        #admin-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--color-primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 99999;
+            transition: transform 0.2s, background 0.2s;
+            border: none;
+            font-size: 24px;
+        }
+
+        #admin-toggle:hover {
+            transform: scale(1.1);
+            background: #2c5282;
+        }
+
+        [dir="rtl"] #admin-toggle {
+            right: auto;
+            left: 24px;
+        }
+
+        /* ===== LOGIN MODAL ===== */
+        .login-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 100000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-modal.active { display: flex; }
+
+        .login-box {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .login-box h2 {
+            color: var(--color-primary);
+            margin-bottom: 8px;
+            font-size: 22px;
+        }
+
+        .login-box p {
+            color: var(--color-muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .login-box input:focus {
+            border-color: var(--color-primary);
+        }
+
+        .login-box .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-box .btn-login:hover { background: #2c5282; }
+
+        .login-box .btn-cancel {
+            width: 100%;
+            padding: 12px;
+            background: #f8f9fa;
+            color: var(--color-muted);
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .login-error {
+            color: #dc3545;
+            font-size: 13px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        /* ===== GRAPES JS - HIDDEN BY DEFAULT ===== */
+        /* When NOT in edit mode, hide all GrapesJS chrome */
+        .gjs-cv-canvas { top: 0 !important; width: 100% !important; height: 100% !important; }
+        .gjs-pn-panel { display: none !important; }
+
+        /* When in EDIT MODE, show the panels */
+        body.admin-mode .gjs-pn-panel { display: flex !important; }
+        body.admin-mode #site-content { border: 2px dashed #3498db; border-radius: 4px; }
+        body.admin-mode .site-header { border-bottom: 2px solid var(--color-accent); }
+        body.admin-mode .site-footer { display: none; }
+
+        /* GrapesJS Theme Overrides */
+        .gjs-one-bg { background-color: var(--color-primary) !important; }
+        .gjs-two-color { color: var(--color-primary) !important; }
+        .gjs-three-bg { background-color: var(--color-accent) !important; color: var(--color-primary) !important; }
+        .gjs-four-color, .gjs-four-color-h:hover { color: var(--color-accent) !important; }
+
+        /* ===== EDITOR TOOLBAR (floating) ===== */
+        #editor-toolbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: var(--color-primary);
+            color: white;
+            z-index: 100001;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        body.admin-mode #editor-toolbar { display: flex; }
+        body.admin-mode .site-header { top: 50px; }
+
+        #editor-toolbar .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        #editor-toolbar .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #editor-toolbar .toolbar-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #editor-toolbar .toolbar-status {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-btn:hover { opacity: 0.9; }
+
+        .toolbar-btn-save {
+            background: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        .toolbar-btn-publish {
+            background: #28a745;
+            color: white;
+        }
+
+        .toolbar-btn-exit {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* ===== NOTIFICATION ===== */
+        .notification {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 200000;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.success { background: #28a745; color: white; }
+        .notification.error { background: #dc3545; color: white; }
+        .notification.info { background: #17a2b8; color: white; }
+
+        /* ===== EMERGENCY CONTACTS ===== */
+        .emergency-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 96px;
+            width: 50px;
+            height: 50px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(220,53,69,0.4);
+            z-index: 99998;
+            transition: transform 0.2s;
+        }
+
+        .emergency-btn:hover { transform: scale(1.05); }
+
+        [dir="rtl"] .emergency-btn {
+            right: auto;
+            left: 96px;
+        }
+
+        body.admin-mode .emergency-btn { display: none; }
+
+        .emergency-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .emergency-modal.active { display: flex; }
+
+        .emergency-content {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .emergency-content h2 {
+            color: #dc3545;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .emergency-item {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .emergency-item h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+        }
+
+        .emergency-item a {
+            display: block;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .emergency-item a:hover { text-decoration: underline; }
+
+        .btn-close-modal {
+            width: 100%;
+            padding: 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-close-modal:hover { background: #5a6268; }
+
+        /* ===== ERROR PAGE ===== */
+        .error-page {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .error-page h1 {
+            font-size: 48px;
+            color: var(--color-primary);
+            margin-bottom: 16px;
+        }
+
+        .error-page p {
+            color: var(--color-muted);
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+
+        .error-page a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--color-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .error-page a:hover { background: #2c5282; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .site-header {
+                text-align: center;
+                justify-content: center;
+            }
+            .site-header nav {
+                width: 100%;
+                justify-content: center;
+            }
+            #editor-toolbar {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            .toolbar-btn { padding: 6px 10px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Floating Editor Toolbar (hidden until edit mode) -->
+    <div id="editor-toolbar">
+        <div class="toolbar-left">
+            <span class="toolbar-title">Visual Editor</span>
+            <span class="toolbar-status" id="toolbar-page-name">home</span>
+        </div>
+        <div class="toolbar-right">
+            <button class="toolbar-btn toolbar-btn-save" onclick="saveDraft()">
+                <i class="fa-solid fa-floppy-disk"></i> Save Draft
+            </button>
+            <button class="toolbar-btn toolbar-btn-publish" onclick="publishPage()">
+                <i class="fa-solid fa-rocket"></i> Publish
+            </button>
+            <button class="toolbar-btn toolbar-btn-exit" onclick="exitEditor()">
+                <i class="fa-solid fa-xmark"></i> Exit
+            </button>
+        </div>
+    </div>
+
+    <!-- Site Header -->
+    <header class="site-header">
+        <div class="logo">
+            <span>&#x1F1F0;&#x1F1FC;</span>
+            <span data-lang-en="KSA Malta" data-lang-ar="&#x627;&#x644;&#x637;&#x644;&#x628;&#x629; &#x627;&#x644;&#x643;&#x648;&#x64A;&#x62A;&#x64A;&#x64A;&#x646; &#x641;&#x64A; &#x645;&#x627;&#x644;&#x637;&#x627;">KSA Malta</span>
+        </div>
+        <nav>
+            <a href="?page=home" data-lang-en="Home" data-lang-ar="&#x627;&#x644;&#x631;&#x626;&#x64A;&#x633;&#x64A;&#x629;">Home</a>
+            <a href="?page=arrivals" data-lang-en="Arrivals" data-lang-ar="&#x627;&#x644;&#x648;&#x635;&#x648;&#x644;">Arrivals</a>
+            <a href="?page=housing" data-lang-en="Housing" data-lang-ar="&#x627;&#x644;&#x633;&#x643;&#x646;">Housing</a>
+            <a href="?page=souq" data-lang-en="Souq" data-lang-ar="&#x627;&#x644;&#x633;&#x648;&#x642;">Souq</a>
+            <a href="?page=archive" data-lang-en="Archive" data-lang-ar="&#x627;&#x644;&#x623;&#x631;&#x634;&#x64A;&#x641;">Archive</a>
+            <a href="/" data-lang-en="Main Site" data-lang-ar="&#x627;&#x644;&#x645;&#x648;&#x642;&#x639; &#x627;&#x644;&#x631;&#x626;&#x64A;&#x633;&#x64A;">Main Site</a>
+        </nav>
+        <button class="lang-toggle" onclick="toggleLanguage()">&#x627;&#x644;&#x639;&#x631;&#x628;&#x64A;&#x629;</button>
+    </header>
+
+    <!-- Main Content Area (GrapesJS binds here in edit mode) -->
+    <div id="site-content">
+        <!-- Published content from Firestore loads here -->
+    </div>
+    <style id="injected-style"></style>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <p>&copy; 2026 Kuwaiti Students Association in Malta</p>
+        <p><a href="/admin/login.html">Admin Login</a></p>
+    </footer>
+
+    <!-- Edit Mode Toggle Button -->
+    <button id="admin-toggle" title="Edit Website">&#x270F;&#xFE0F;</button>
+
+    <!-- Emergency Contacts Button -->
+    <button class="emergency-btn" onclick="showEmergency()" title="Emergency Contacts">&#x1F198;</button>
+
+    <!-- Emergency Modal -->
+    <div id="emergency-modal" class="emergency-modal">
+        <div class="emergency-content">
+            <h2>&#x1F198; Emergency Contacts</h2>
+            <div class="emergency-item">
+                <h3>Kuwaiti Embassy in Malta</h3>
+                <a href="tel:+35621234567">&#x1F4DE; +356 2123 4567</a>
+                <a href="mailto:kuwait@embassy.mt">&#x2709;&#xFE0F; kuwait@embassy.mt</a>
+            </div>
+            <div class="emergency-item">
+                <h3>Kuwaiti Cultural Office</h3>
+                <a href="tel:+35621234568">&#x1F4DE; +356 2123 4568</a>
+                <a href="mailto:cultural@ksamalta.org">&#x2709;&#xFE0F; cultural@ksamalta.org</a>
+            </div>
+            <div class="emergency-item">
+                <h3>Malta Emergency Services</h3>
+                <a href="tel:112">&#x1F4DE; Police/Ambulance: 112</a>
+                <a href="tel:21234100">&#x1F4DE; Mater Dei Hospital: 2123 4100</a>
+            </div>
+            <div class="emergency-item">
+                <h3>KSA Malta President</h3>
+                <a href="tel:+35679123456">&#x1F4DE; +356 7912 3456</a>
+                <a href="https://wa.me/35679123456">&#x1F4AC; WhatsApp</a>
+            </div>
+            <button class="btn-close-modal" onclick="hideEmergency()">Close</button>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal">
+        <div class="login-box">
+            <h2>Admin Login</h2>
+            <p>Sign in to edit this website</p>
+            <div id="login-error" class="login-error"></div>
+            <input type="email" id="login-email" placeholder="Email address" autocomplete="email">
+            <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+            <button class="btn-login" onclick="handleLogin()">Sign In</button>
+            <button class="btn-cancel" onclick="hideLoginModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // ========================================
+        // FIREBASE CONFIGURATION
+        // ========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMiL3f5uie0io5hsHBiHhHIq2q5Vv-WbA",
+            authDomain: "kwt-mt.firebaseapp.com",
+            projectId: "kwt-mt",
+            storageBucket: "kwt-mt.firebasestorage.app",
+            messagingSenderId: "253960446965",
+            appId: "1:253960446965:web:66836ed17301968f6436bc"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        let editor = null;
+        let currentUser = null;
+        let currentUserRole = null;
+
+        // ========================================
+        // PAGE ROUTING
+        // ========================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageSlug = urlParams.get('page') || 'home';
+        document.getElementById('toolbar-page-name').textContent = pageSlug;
+
+        // Language
+        let currentLang = localStorage.getItem('lang') || 'en';
+        applyLanguage(currentLang);
+
+        // Highlight active nav
+        document.querySelectorAll('.site-header nav a').forEach(link => {
+            if (link.href.includes('page=' + pageSlug)) {
+                link.classList.add('active');
+            }
+        });
+
+        // ========================================
+        // 1. LOAD PUBLISHED CONTENT (READ-ONLY)
+        // ========================================
+        async function loadContent() {
+            try {
+                const docSnap = await db.collection("pages").doc(pageSlug).get();
+
+                if (docSnap.exists && docSnap.data().published) {
+                    const published = docSnap.data().published;
+                    const meta = docSnap.data().meta;
+
+                    if (meta) {
+                        const title = currentLang === 'ar' && meta.title_ar ? meta.title_ar : meta.title;
+                        document.title = title + ' - KSA Malta';
+                        if (meta.description) {
+                            document.querySelector('meta[name="description"]').setAttribute('content', meta.description);
+                        }
+                    }
+
+                    document.getElementById('injected-style').innerHTML = published.css || '';
+                    document.getElementById('site-content').innerHTML = published.html || '';
+
+                } else {
+                    // Fallback: show default hero if no published content
+                    document.getElementById('site-content').innerHTML = `
+                        <section style="position:relative; min-height:500px; background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); display:flex; align-items:center; justify-content:center; padding: 40px 20px;">
+                            <div style="text-align:center; color:white; max-width:800px;">
+                                <h1 style="font-size:48px; font-weight:700; margin-bottom:16px; line-height: 1.2;">Welcome to KSA Malta</h1>
+                                <p style="font-size:20px; margin-bottom:32px; opacity:0.95; line-height: 1.6;">Your guide to studying and living in Malta</p>
+                                <p style="font-size:14px; opacity:0.7;">This page has not been published yet. Admins can click the pencil button to start editing.</p>
+                            </div>
+                        </section>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading content:', error);
+                document.getElementById('site-content').innerHTML = `
+                    <div class="error-page">
+                        <h1>Error</h1>
+                        <p>Failed to load page content.</p>
+                        <a href="?page=home">Go to Home</a>
+                    </div>
+                `;
+            }
+            document.getElementById('loader').style.display = 'none';
+        }
+
+        loadContent();
+
+        // ========================================
+        // 2. EDIT MODE TOGGLE
+        // ========================================
+        document.getElementById('admin-toggle').addEventListener('click', () => {
+            // Check if already logged in
+            const user = auth.currentUser;
+            if (user && currentUserRole) {
+                activateEditor();
+            } else {
+                showLoginModal();
+            }
+        });
+
+        // Also auto-detect if user is already signed in
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                try {
+                    const token = await user.getIdTokenResult();
+                    if (token.claims.role && ['admin', 'super_admin', 'editor'].includes(token.claims.role)) {
+                        currentUser = user;
+                        currentUserRole = token.claims.role;
+                        // Show edit button with active indicator
+                        document.getElementById('admin-toggle').style.background = '#28a745';
+                        document.getElementById('admin-toggle').title = 'Edit Website (Logged in as ' + user.email + ')';
+                    }
+                } catch (e) {
+                    console.error('Auth check error:', e);
+                }
+            }
+        });
+
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.add('active');
+            document.getElementById('login-email').focus();
+        }
+
+        function hideLoginModal() {
+            document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+
+            if (!email || !password) {
+                errorEl.textContent = 'Please enter email and password.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const token = await userCredential.user.getIdTokenResult();
+
+                if (!token.claims.role || !['admin', 'super_admin', 'editor'].includes(token.claims.role)) {
+                    errorEl.textContent = 'You do not have editor permissions.';
+                    errorEl.style.display = 'block';
+                    await auth.signOut();
+                    return;
+                }
+
+                currentUser = userCredential.user;
+                currentUserRole = token.claims.role;
+                hideLoginModal();
+                activateEditor();
+
+            } catch (error) {
+                console.error('Login error:', error);
+                const messages = {
+                    'auth/user-not-found': 'No account found with this email.',
+                    'auth/wrong-password': 'Incorrect password.',
+                    'auth/invalid-email': 'Invalid email address.',
+                    'auth/too-many-requests': 'Too many attempts. Try again later.',
+                    'auth/invalid-credential': 'Invalid email or password.',
+                };
+                errorEl.textContent = messages[error.code] || 'Login failed: ' + error.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // Allow Enter key to submit login
+        document.getElementById('login-password').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // ========================================
+        // 3. ACTIVATE VISUAL EDITOR (GrapesJS)
+        // ========================================
+        async function activateEditor() {
+            if (editor) {
+                // Already active, just ensure mode is on
+                document.body.classList.add('admin-mode');
+                return;
+            }
+
+            document.body.classList.add('admin-mode');
+            showNotification('Loading editor...', 'info');
+
+            // Load draft content into #site-content before initializing GrapesJS
+            try {
+                const docSnap = await db.collection("pages").doc(pageSlug).get();
+                if (docSnap.exists && docSnap.data().draft) {
+                    const draft = docSnap.data().draft;
+                    // Load draft HTML/CSS for editing
+                    document.getElementById('injected-style').innerHTML = '';
+                    document.getElementById('site-content').innerHTML = draft.html || '';
+                }
+            } catch (e) {
+                console.error('Error loading draft:', e);
+            }
+
+            // Custom Kuwaiti Blocks Plugin
+            const customKuwaitiBlocks = (editorInstance) => {
+                const bm = editorInstance.BlockManager;
+
+                // === CATEGORY: KSA Malta ===
+
+                bm.add('hero-banner', {
+                    label: 'Hero Banner',
+                    category: 'KSA Malta',
+                    content: `
+                        <section style="position:relative; min-height:500px; background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%); display:flex; align-items:center; justify-content:center; padding: 40px 20px;">
+                            <div style="text-align:center; color:white; max-width:800px;">
+                                <h1 style="font-size:48px; font-weight:700; margin-bottom:16px; line-height: 1.2;">Welcome to Malta</h1>
+                                <p style="font-size:20px; margin-bottom:32px; opacity:0.95; line-height: 1.6;">Your guide to studying and living in Malta</p>
+                                <a href="#" style="display:inline-block; padding:16px 32px; background:#d4a853; color:#1a365d; font-weight:600; border-radius:8px; text-decoration:none;">Get Started</a>
+                            </div>
+                        </section>
+                    `,
+                    media: '<i class="fa-solid fa-panorama" style="font-size:40px;"></i>'
+                });
+
+                bm.add('event-card', {
+                    label: 'Event Card',
+                    category: 'KSA Malta',
+                    content: `
+                        <div style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:350px; margin: 20px;">
+                            <div style="background:#1a365d; color:white; padding:16px; text-align:center;">
+                                <span style="display:block; font-size:14px; text-transform:uppercase; letter-spacing: 1px;">March</span>
+                                <span style="display:block; font-size:36px; font-weight:700;">15</span>
+                            </div>
+                            <div style="padding:24px;">
+                                <h3 style="font-size:20px; font-weight:600; margin-bottom:8px; color:#1a365d;">Event Title</h3>
+                                <p style="color:#6c757d; font-size:14px; margin-bottom:16px; line-height: 1.6;">Location: Malta Campus | Time: 6:00 PM</p>
+                                <a href="#" style="display:inline-block; padding:12px 24px; background:#d4a853; color:#1a365d; font-weight:500; border-radius:6px; text-decoration:none;">Register Now</a>
+                            </div>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-calendar-days" style="font-size:40px;"></i>'
+                });
+
+                bm.add('contact-card', {
+                    label: 'Contact Card',
+                    category: 'KSA Malta',
+                    content: `
+                        <div style="background:white; border-radius:12px; padding:24px; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:flex; gap:20px; align-items:center; max-width:400px; margin: 20px;">
+                            <div style="width:80px; height:80px; border-radius:50%; background:#e9ecef; display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink: 0;">&#x1F464;</div>
+                            <div>
+                                <h4 style="font-size:18px; font-weight:600; margin-bottom:4px; color:#1a365d;">Contact Name</h4>
+                                <p style="color:#6c757d; font-size:14px; margin-bottom:12px;">President / Vice President</p>
+                                <div style="display:flex; gap:12px;">
+                                    <a href="tel:+356" style="font-size:20px; text-decoration: none;">&#x1F4DE;</a>
+                                    <a href="mailto:" style="font-size:20px; text-decoration: none;">&#x2709;&#xFE0F;</a>
+                                    <a href="https://wa.me/" style="font-size:20px; text-decoration: none;">&#x1F4AC;</a>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-address-card" style="font-size:40px;"></i>'
+                });
+
+                bm.add('announcement', {
+                    label: 'Announcement',
+                    category: 'KSA Malta',
+                    content: `
+                        <div style="background:#fff3cd; border-left:4px solid #d4a853; padding:20px; border-radius:0 8px 8px 0; margin: 20px 0;">
+                            <h4 style="font-size:16px; font-weight:600; color:#1a365d; margin-bottom:8px;">Important Announcement</h4>
+                            <p style="color:#495057; font-size:14px; line-height: 1.6;">This is an important announcement for all students. Update this text with your message.</p>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-bullhorn" style="font-size:40px;"></i>'
+                });
+
+                bm.add('faq-item', {
+                    label: 'FAQ Item',
+                    category: 'KSA Malta',
+                    content: `
+                        <div style="border-bottom:1px solid #e9ecef; padding:20px 0;">
+                            <h4 style="font-size:18px; font-weight:600; margin-bottom:12px; color:#1a365d;">How do I apply for accommodation?</h4>
+                            <p style="color:#495057; font-size:15px; line-height:1.6;">Answer goes here. Provide helpful information for students about the accommodation application process.</p>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-circle-question" style="font-size:40px;"></i>'
+                });
+
+                bm.add('info-box', {
+                    label: 'Info Box',
+                    category: 'KSA Malta',
+                    content: `
+                        <div style="background:#e7f3ff; border-left:4px solid #1a365d; padding:20px; border-radius:0 8px 8px 0; margin: 20px 0;">
+                            <h4 style="font-size:16px; font-weight:600; color:#1a365d; margin-bottom:8px;">Information</h4>
+                            <p style="color:#495057; font-size:14px; line-height: 1.6;">Helpful information or tips for students can go here.</p>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-circle-info" style="font-size:40px;"></i>'
+                });
+
+                // === CATEGORY: Kuwaiti Tools ===
+
+                bm.add('prayer-widget', {
+                    label: 'Prayer Times',
+                    category: 'Kuwaiti Tools',
+                    content: `
+                        <div style="background:#2c3e50; color:white; padding:20px; border-radius:10px; text-align:center; max-width:400px; margin:20px auto;">
+                            <h3 style="margin-top:0; margin-bottom:12px; font-size:20px;">Prayer Times (Malta)</h3>
+                            <iframe src="https://timesprayer.com/widgets.php?frame=2&lang=en&name=valletta&avt=1&fcolor=2C3E50&scolor=F1C40F"
+                                style="border:none; overflow:hidden; width:100%; height:200px;">
+                            </iframe>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-mosque" style="font-size:40px;"></i>'
+                });
+
+                bm.add('emergency-btn-block', {
+                    label: 'Emergency Button',
+                    category: 'Kuwaiti Tools',
+                    content: `
+                        <div style="text-align:center; margin:20px 0;">
+                            <a href="tel:+35621234567" style="background:#c0392b; color:white; font-size:18px; font-weight:bold; padding:15px 30px; border-radius:50px; text-decoration:none; box-shadow:0 4px 15px rgba(192, 57, 43, 0.4); display:inline-block;">
+                                &#x1F4DE; Contact Embassy Emergency
+                            </a>
+                            <p style="font-size:12px; color:#c0392b; margin-top:8px;">Click only in urgent cases</p>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-phone-volume" style="font-size:40px;"></i>'
+                });
+
+                bm.add('diwaniya-card', {
+                    label: 'Diwaniya Card',
+                    category: 'Kuwaiti Tools',
+                    content: `
+                        <div style="border:1px solid #ddd; border-radius:12px; overflow:hidden; max-width:350px; margin:20px; background:white; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                            <div style="height:160px; background: linear-gradient(135deg, #1a365d, #2c5282); display:flex; align-items:center; justify-content:center;">
+                                <span style="font-size:64px;">&#x2615;</span>
+                            </div>
+                            <div style="padding:20px;">
+                                <span style="background:#d4a853; color:#1a365d; padding:3px 10px; border-radius:4px; font-size:12px; font-weight:bold;">DIWANIYA</span>
+                                <h3 style="margin:12px 0 8px; color:#1a365d; font-size:20px;">Weekly Diwaniya Gathering</h3>
+                                <p style="color:#666; font-size:14px; line-height:1.6;">Join us for coffee, conversation, and community at the Student Hub every Thursday evening.</p>
+                                <a href="#" style="display:block; text-align:center; background:#1a365d; color:white; padding:12px; text-decoration:none; border-radius:8px; margin-top:16px; font-weight:600;">RSVP Now</a>
+                            </div>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-mug-hot" style="font-size:40px;"></i>'
+                });
+
+                bm.add('whatsapp-link', {
+                    label: 'WhatsApp Group',
+                    category: 'Kuwaiti Tools',
+                    content: `
+                        <div style="text-align:center; margin:20px 0;">
+                            <a href="https://chat.whatsapp.com/YOUR_LINK" target="_blank" style="background:#25D366; color:white; font-size:16px; font-weight:bold; padding:14px 28px; border-radius:50px; text-decoration:none; display:inline-flex; align-items:center; gap:10px; box-shadow:0 4px 15px rgba(37, 211, 102, 0.3);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                Join Our WhatsApp Group
+                            </a>
+                        </div>
+                    `,
+                    media: '<i class="fa-brands fa-whatsapp" style="font-size:40px;"></i>'
+                });
+
+                // === CATEGORY: Layout ===
+
+                bm.add('two-columns', {
+                    label: 'Two Columns',
+                    category: 'Layout',
+                    content: `
+                        <div style="display:flex; gap:40px; padding:40px 20px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:280px;">
+                                <h3 style="font-size:24px; font-weight:600; margin-bottom:16px; color:#1a365d;">Left Column</h3>
+                                <p style="color:#495057; line-height:1.6;">Content for the left column goes here.</p>
+                            </div>
+                            <div style="flex:1; min-width:280px;">
+                                <h3 style="font-size:24px; font-weight:600; margin-bottom:16px; color:#1a365d;">Right Column</h3>
+                                <p style="color:#495057; line-height:1.6;">Content for the right column goes here.</p>
+                            </div>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-columns" style="font-size:40px;"></i>'
+                });
+
+                bm.add('three-columns', {
+                    label: 'Three Columns',
+                    category: 'Layout',
+                    content: `
+                        <div style="display:flex; gap:24px; padding:40px 20px; flex-wrap:wrap;">
+                            <div style="flex:1; min-width:200px;">
+                                <h4 style="font-size:18px; font-weight:600; margin-bottom:12px; color:#1a365d;">Column 1</h4>
+                                <p style="color:#495057; line-height:1.6;">Content goes here.</p>
+                            </div>
+                            <div style="flex:1; min-width:200px;">
+                                <h4 style="font-size:18px; font-weight:600; margin-bottom:12px; color:#1a365d;">Column 2</h4>
+                                <p style="color:#495057; line-height:1.6;">Content goes here.</p>
+                            </div>
+                            <div style="flex:1; min-width:200px;">
+                                <h4 style="font-size:18px; font-weight:600; margin-bottom:12px; color:#1a365d;">Column 3</h4>
+                                <p style="color:#495057; line-height:1.6;">Content goes here.</p>
+                            </div>
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-table-columns" style="font-size:40px;"></i>'
+                });
+
+                bm.add('section-divider', {
+                    label: 'Section Divider',
+                    category: 'Layout',
+                    content: `
+                        <div style="padding:40px 20px; text-align:center;">
+                            <hr style="border:none; border-top:2px solid #e9ecef; max-width:200px; margin:0 auto;">
+                        </div>
+                    `,
+                    media: '<i class="fa-solid fa-minus" style="font-size:40px;"></i>'
+                });
+            };
+
+            // Initialize GrapesJS on top of existing content
+            editor = grapesjs.init({
+                container: '#site-content',
+                fromElement: true,
+                height: '100vh',
+                width: 'auto',
+                storageManager: false,
+                plugins: ['gjs-preset-webpage', customKuwaitiBlocks],
+                pluginsOpts: {
+                    'gjs-preset-webpage': {
+                        blocksBasicOpts: {
+                            blocks: ['column1', 'column2', 'column3', 'text', 'link', 'image', 'video', 'map'],
+                            flexGrid: true,
+                        },
+                        blocks: ['link-block', 'quote', 'text-basic'],
+                    }
+                },
+                canvas: {
+                    styles: [
+                        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+                        'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap'
+                    ]
+                },
+                assetManager: {
+                    upload: false,
+                    uploadFile: async function(e) {
+                        const files = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+                        const file = files[0];
+                        if (!file) return;
+
+                        try {
+                            const storageRef = storage.ref('cms-assets/' + Date.now() + '_' + file.name);
+                            const snapshot = await storageRef.put(file);
+                            const url = await snapshot.ref.getDownloadURL();
+                            editor.AssetManager.add({ src: url });
+                            showNotification('Image uploaded!', 'success');
+                        } catch (error) {
+                            console.error('Upload error:', error);
+                            showNotification('Upload failed: ' + error.message, 'error');
+                        }
+                    }
+                },
+                deviceManager: {
+                    devices: [
+                        { name: 'Desktop', width: '' },
+                        { name: 'Tablet', width: '768px', widthMedia: '992px' },
+                        { name: 'Mobile', width: '320px', widthMedia: '480px' }
+                    ]
+                }
+            });
+
+            // Load GrapesJS project data from draft if available
+            try {
+                const docSnap = await db.collection("pages").doc(pageSlug).get();
+                if (docSnap.exists && docSnap.data().draft && docSnap.data().draft.components) {
+                    const projectData = JSON.parse(docSnap.data().draft.components);
+                    editor.loadProjectData(projectData);
+                    showNotification('Draft loaded - you can now edit!', 'success');
+                } else {
+                    showNotification('Editor active! Click any text to edit. Drag blocks from the right panel.', 'success');
+                }
+            } catch (e) {
+                console.error('Error loading project data:', e);
+                showNotification('Editor active! Click text to edit, drag blocks from the right.', 'success');
+            }
+
+            // Keyboard shortcut: Ctrl+S to save
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveDraft();
+                }
+            });
+        }
+
+        // ========================================
+        // 4. SAVE / PUBLISH / EXIT
+        // ========================================
+        async function saveDraft(silent) {
+            if (!editor || !currentUser) return;
+
+            const html = editor.getHtml();
+            const css = editor.getCss();
+            const components = JSON.stringify(editor.getProjectData());
+
+            try {
+                await db.collection("pages").doc(pageSlug).set({
+                    draft: {
+                        html: html,
+                        css: css,
+                        components: components,
+                        styles: '',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: currentUser.email
+                    }
+                }, { merge: true });
+
+                await db.collection("audit_logs").add({
+                    action: 'draft_save',
+                    pageSlug: pageSlug,
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                if (!silent) {
+                    showNotification('Draft saved!', 'success');
+                }
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                showNotification('Save failed: ' + error.message, 'error');
+            }
+        }
+
+        async function publishPage() {
+            if (!editor || !currentUser) return;
+
+            if (!confirm('Publish this page to the live site? All visitors will see these changes.')) {
+                return;
+            }
+
+            const note = prompt('Version note (optional):', 'Published from visual builder');
+
+            const html = editor.getHtml();
+            const css = editor.getCss();
+            const components = JSON.stringify(editor.getProjectData());
+            const versionId = Date.now().toString();
+
+            try {
+                const batch = db.batch();
+
+                // Version snapshot
+                const versionRef = db.collection("pages").doc(pageSlug)
+                    .collection("versions").doc(versionId);
+                batch.set(versionRef, {
+                    html: html,
+                    css: css,
+                    components: components,
+                    styles: '',
+                    note: note || '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: currentUser.email
+                });
+
+                // Update published content
+                const pageRef = db.collection("pages").doc(pageSlug);
+                batch.set(pageRef, {
+                    published: {
+                        html: html,
+                        css: css,
+                        publishedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        publishedBy: currentUser.email,
+                        versionId: versionId
+                    },
+                    draft: {
+                        html: html,
+                        css: css,
+                        components: components,
+                        styles: '',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedBy: currentUser.email
+                    },
+                    'meta.lastPublishedAt': firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                await batch.commit();
+
+                await db.collection("audit_logs").add({
+                    action: 'publish',
+                    pageSlug: pageSlug,
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    versionId: versionId,
+                    note: note,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showNotification('Published! The page is now live.', 'success');
+
+            } catch (error) {
+                console.error('Error publishing:', error);
+                showNotification('Publish failed: ' + error.message, 'error');
+            }
+        }
+
+        function exitEditor() {
+            if (editor) {
+                const changesCount = editor.getDirtyCount();
+                if (changesCount > 0) {
+                    if (!confirm('You have unsaved changes. Exit anyway?')) {
+                        return;
+                    }
+                }
+            }
+            // Reload the page to restore read-only view
+            window.location.reload();
+        }
+
+        // ========================================
+        // 5. UTILITIES
+        // ========================================
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification ' + (type || 'info');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            localStorage.setItem('lang', currentLang);
+            applyLanguage(currentLang);
+        }
+
+        function applyLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.querySelector('.lang-toggle').textContent = lang === 'en' ? '\u0627\u0644\u0639\u0631\u0628\u064A\u0629' : 'English';
+            document.querySelectorAll('[data-lang-en]').forEach(el => {
+                el.textContent = el.getAttribute('data-lang-' + lang);
+            });
+        }
+
+        function showEmergency() {
+            document.getElementById('emergency-modal').classList.add('active');
+        }
+
+        function hideEmergency() {
+            document.getElementById('emergency-modal').classList.remove('active');
+        }
+
+        document.getElementById('emergency-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'emergency-modal') hideEmergency();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideEmergency();
+        });
+
+        // Warn before leaving with unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (editor) {
+                const changesCount = editor.getDirtyCount();
+                if (changesCount > 0) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes.';
+                    return e.returnValue;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
