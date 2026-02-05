@@ -15,9 +15,14 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
+  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
+  GripVertical,
+  Eye,
+  EyeOff,
   Save,
   RotateCcw,
   Check,
@@ -27,6 +32,7 @@ import {
   LayoutGrid,
   Sparkles,
   ChevronRight,
+  Move,
   Info,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,11 +41,298 @@ import { db } from '../../../services/firebase';
 import { useAuth } from '../../../contexts/AuthContext';
 import Card from '../../ui/Card';
 import Button from '../../ui/Button';
-import { SectionConfig } from './types';
-import { defaultSections, sectionPreviews } from './constants';
-import SortableSectionItem from './SortableSectionItem';
-import DragOverlayContent from './DragOverlayContent';
 
+// Section configuration interface (matches SiteSettings)
+export interface SectionConfig {
+  id: string;
+  label: string;
+  visible: boolean;
+  order: number;
+}
+
+// Section preview data for visual representation
+interface SectionPreview {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  color: string;
+  previewHeight: string;
+}
+
+// Define section preview metadata
+const sectionPreviews: Record<string, SectionPreview> = {
+  hero: {
+    id: 'hero',
+    label: 'Hero Banner',
+    description: 'Main hero section with title, subtitle and CTA',
+    icon: '🏠',
+    color: 'from-primary-500 to-primary-700',
+    previewHeight: 'h-32',
+  },
+  announcements: {
+    id: 'announcements',
+    label: 'Announcements',
+    description: 'Important announcements banner',
+    icon: '📢',
+    color: 'from-amber-500 to-orange-500',
+    previewHeight: 'h-12',
+  },
+  stats: {
+    id: 'stats',
+    label: 'Statistics',
+    description: 'Key numbers and metrics display',
+    icon: '📊',
+    color: 'from-blue-500 to-cyan-500',
+    previewHeight: 'h-20',
+  },
+  about: {
+    id: 'about',
+    label: 'About Section',
+    description: 'About us with text and image gallery',
+    icon: '💬',
+    color: 'from-green-500 to-emerald-500',
+    previewHeight: 'h-28',
+  },
+  'featured-events': {
+    id: 'featured-events',
+    label: 'Featured Events',
+    description: 'Highlighted events in card grid',
+    icon: '⭐',
+    color: 'from-purple-500 to-violet-500',
+    previewHeight: 'h-24',
+  },
+  'upcoming-events': {
+    id: 'upcoming-events',
+    label: 'Upcoming Events',
+    description: 'Calendar of upcoming events',
+    icon: '📅',
+    color: 'from-indigo-500 to-blue-500',
+    previewHeight: 'h-24',
+  },
+  'why-join': {
+    id: 'why-join',
+    label: 'Why Join Us',
+    description: 'Benefits and features cards',
+    icon: '🎯',
+    color: 'from-pink-500 to-rose-500',
+    previewHeight: 'h-20',
+  },
+  cta: {
+    id: 'cta',
+    label: 'Call to Action',
+    description: 'Main conversion section',
+    icon: '🚀',
+    color: 'from-secondary-500 to-teal-500',
+    previewHeight: 'h-24',
+  },
+  gallery: {
+    id: 'gallery',
+    label: 'Gallery Preview',
+    description: 'Photo gallery grid',
+    icon: '🖼️',
+    color: 'from-orange-500 to-red-500',
+    previewHeight: 'h-20',
+  },
+};
+
+// Default sections
+const defaultSections: SectionConfig[] = [
+  { id: 'hero', label: 'Hero Banner', visible: true, order: 0 },
+  { id: 'announcements', label: 'Announcements', visible: true, order: 1 },
+  { id: 'stats', label: 'Statistics', visible: true, order: 2 },
+  { id: 'about', label: 'About Section', visible: true, order: 3 },
+  { id: 'featured-events', label: 'Featured Events', visible: true, order: 4 },
+  { id: 'upcoming-events', label: 'Upcoming Events', visible: true, order: 5 },
+  { id: 'why-join', label: 'Why Join Us', visible: true, order: 6 },
+  { id: 'cta', label: 'Call to Action', visible: true, order: 7 },
+  { id: 'gallery', label: 'Gallery Preview', visible: true, order: 8 },
+];
+
+// Sortable Section Item Component
+interface SortableSectionItemProps {
+  section: SectionConfig;
+  preview: SectionPreview;
+  onToggleVisibility: (id: string) => void;
+  isCompact: boolean;
+  isDragging?: boolean;
+}
+
+function SortableSectionItem({
+  section,
+  preview,
+  onToggleVisibility,
+  isCompact,
+  isDragging = false,
+}: SortableSectionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id: section.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const isCurrentlyDragging = isDragging || isSortableDragging;
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className={`relative rounded-xl border-2 transition-all duration-200 ${
+        isCurrentlyDragging
+          ? 'border-primary-500 shadow-xl shadow-primary-500/20 z-50 scale-[1.02]'
+          : section.visible
+          ? 'border-neutral-200 dark:border-neutral-700 hover:border-primary-300 dark:hover:border-primary-600'
+          : 'border-dashed border-neutral-300 dark:border-neutral-600 opacity-50'
+      } ${
+        section.visible
+          ? 'bg-white dark:bg-neutral-800'
+          : 'bg-neutral-100 dark:bg-neutral-900'
+      }`}
+    >
+      {/* Drag Handle - Large touch target */}
+      <div
+        {...attributes}
+        {...listeners}
+        className={`absolute top-0 left-0 right-0 ${
+          isCompact ? 'h-10' : 'h-12'
+        } bg-gradient-to-r ${
+          section.visible ? preview.color : 'from-neutral-400 to-neutral-500'
+        } rounded-t-xl cursor-grab active:cursor-grabbing flex items-center justify-center gap-2 touch-none`}
+      >
+        <GripVertical className="w-5 h-5 text-white/80" />
+        <span className="text-white text-sm font-medium select-none">
+          <Move className="w-4 h-4 inline mr-1" />
+          Hold to Drag
+        </span>
+      </div>
+
+      {/* Content */}
+      <div className={`${isCompact ? 'pt-12 p-3' : 'pt-14 p-4'}`}>
+        <div className="flex items-start gap-3">
+          {/* Icon */}
+          <div
+            className={`${isCompact ? 'text-2xl' : 'text-3xl'} shrink-0 ${
+              !section.visible && 'grayscale opacity-50'
+            }`}
+          >
+            {preview.icon}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h4
+                className={`font-semibold text-neutral-900 dark:text-white truncate ${
+                  !section.visible && 'line-through text-neutral-500'
+                }`}
+              >
+                {preview.label}
+              </h4>
+              {!isCompact && (
+                <span className="text-xs text-neutral-400 bg-neutral-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
+                  #{section.order + 1}
+                </span>
+              )}
+            </div>
+            {!isCompact && (
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-1">
+                {preview.description}
+              </p>
+            )}
+          </div>
+
+          {/* Visibility Toggle */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleVisibility(section.id);
+            }}
+            className={`shrink-0 ${
+              isCompact ? 'w-9 h-9' : 'w-10 h-10'
+            } rounded-lg flex items-center justify-center transition-colors ${
+              section.visible
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-600'
+            }`}
+            title={section.visible ? 'Hide section' : 'Show section'}
+          >
+            {section.visible ? (
+              <Eye className="w-5 h-5" />
+            ) : (
+              <EyeOff className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+
+        {/* Preview Bar */}
+        {!isCompact && (
+          <div
+            className={`mt-3 rounded-lg bg-gradient-to-r ${preview.color} ${preview.previewHeight} ${
+              !section.visible && 'grayscale opacity-30'
+            } flex items-center justify-center`}
+          >
+            <div className="flex items-center gap-2 text-white/80 text-xs">
+              <LayoutGrid className="w-4 h-4" />
+              <span>Section Preview</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// Drag Overlay Component
+function DragOverlayContent({
+  section,
+  preview,
+  isCompact,
+}: {
+  section: SectionConfig;
+  preview: SectionPreview;
+  isCompact: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border-2 border-primary-500 shadow-2xl shadow-primary-500/30 bg-white dark:bg-neutral-800 ${
+        isCompact ? 'w-72' : 'w-80'
+      }`}
+    >
+      <div
+        className={`${
+          isCompact ? 'h-10' : 'h-12'
+        } bg-gradient-to-r ${preview.color} rounded-t-xl flex items-center justify-center gap-2`}
+      >
+        <GripVertical className="w-5 h-5 text-white/80" />
+        <span className="text-white text-sm font-medium">Moving...</span>
+      </div>
+      <div className={`${isCompact ? 'p-3' : 'p-4'}`}>
+        <div className="flex items-center gap-3">
+          <span className={`${isCompact ? 'text-2xl' : 'text-3xl'}`}>
+            {preview.icon}
+          </span>
+          <h4 className="font-semibold text-neutral-900 dark:text-white">
+            {preview.label}
+          </h4>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main Visual Page Builder Component
 export default function VisualPageBuilder() {
   const { currentUser } = useAuth();
   const [sections, setSections] = useState<SectionConfig[]>(defaultSections);

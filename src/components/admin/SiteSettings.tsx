@@ -24,8 +24,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
-// Re-export SectionConfig from the shared visual-builder types
-export type { SectionConfig } from './visual-builder/types';
+// Re-export SectionConfig from the visual-builder module
+export type { SectionConfig } from './visual-builder/VisualPageBuilder';
 
 export interface SiteSettingsData {
   // Hero Section
