@@ -317,6 +317,321 @@ exports.logPageChanges = functions.firestore
  * Body: { "uid": "user-uid" }
  * Headers: Authorization: Bearer <admin-token>
  */
+/**
+ * Get handover data by ID and hash
+ * Called after scanning a QR code to fetch full handover details
+ *
+ * Usage from frontend:
+ * const getHandover = firebase.functions().httpsCallable('getHandover');
+ * const result = await getHandover({ id: 'handover-id', hash: 'verification-hash' });
+ */
+exports.getHandover = functions.https.onCall(async (data, context) => {
+    // Check if the caller is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to retrieve handover data'
+        );
+    }
+
+    const { id, hash } = data;
+
+    // Validate inputs
+    if (!id || typeof id !== 'string') {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'The id parameter must be a valid string'
+        );
+    }
+
+    if (!hash || typeof hash !== 'string') {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'The hash parameter must be a valid string'
+        );
+    }
+
+    try {
+        // Fetch handover document from Firestore
+        const handoverDoc = await admin.firestore()
+            .collection('handovers')
+            .doc(id)
+            .get();
+
+        if (!handoverDoc.exists) {
+            throw new functions.https.HttpsError(
+                'not-found',
+                'Handover not found'
+            );
+        }
+
+        const handover = handoverDoc.data();
+
+        // Verify hash matches
+        if (handover.hash !== hash) {
+            throw new functions.https.HttpsError(
+                'permission-denied',
+                'Invalid handover verification hash'
+            );
+        }
+
+        // Check if handover has expired
+        if (handover.expiresAt && handover.expiresAt.toMillis() < Date.now()) {
+            throw new functions.https.HttpsError(
+                'deadline-exceeded',
+                'This handover has expired'
+            );
+        }
+
+        // Log the access
+        await admin.firestore().collection('audit_logs').add({
+            action: 'handover_accessed',
+            handoverId: id,
+            accessedBy: context.auth.uid,
+            accessedByEmail: context.auth.token.email,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return handover;
+    } catch (error) {
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        console.error('Error fetching handover:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            'Failed to retrieve handover data: ' + error.message
+        );
+    }
+});
+
+/**
+ * Sync audit logs from client to server
+ * Receives a batch of locally cached audit log entries and stores them in Firestore
+ *
+ * Usage from frontend:
+ * const syncAuditLogs = firebase.functions().httpsCallable('syncAuditLogs');
+ * await syncAuditLogs({ logs: arrayOfLogEntries });
+ */
+exports.syncAuditLogs = functions.https.onCall(async (data, context) => {
+    // Check if the caller is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'You must be logged in to sync audit logs'
+        );
+    }
+
+    const { logs } = data;
+
+    // Validate input
+    if (!Array.isArray(logs) || logs.length === 0) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'The logs parameter must be a non-empty array'
+        );
+    }
+
+    // Limit batch size to prevent abuse
+    if (logs.length > 100) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Maximum 100 logs per sync batch'
+        );
+    }
+
+    try {
+        const batch = admin.firestore().batch();
+        const auditCollection = admin.firestore().collection('audit_logs');
+
+        for (const log of logs) {
+            const docRef = auditCollection.doc(log.id || admin.firestore().collection('_').doc().id);
+            batch.set(docRef, {
+                action: log.action || 'unknown',
+                entityType: log.entityType || null,
+                entityId: log.entityId || null,
+                userId: context.auth.uid,
+                userEmail: context.auth.token.email,
+                deviceId: log.deviceId || null,
+                sessionId: log.sessionId || null,
+                details: log.details || {},
+                clientTimestamp: log.timestamp || null,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                syncedFromClient: true
+            });
+        }
+
+        await batch.commit();
+
+        return {
+            success: true,
+            message: `${logs.length} audit log(s) synced successfully`
+        };
+    } catch (error) {
+        console.error('Error syncing audit logs:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            'Failed to sync audit logs: ' + error.message
+        );
+    }
+});
+
+/**
+ * Submit a contact form message
+ * Validates input and stores in Firestore with server timestamp
+ *
+ * Usage from frontend:
+ * const submitContactForm = firebase.functions().httpsCallable('submitContactForm');
+ * const result = await submitContactForm({ name, email, subject, message });
+ */
+exports.submitContactForm = functions.https.onCall(async (data) => {
+    const { name, email, subject, message } = data;
+
+    // Validate required fields
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Name is required'
+        );
+    }
+
+    if (!email || typeof email !== 'string' || !/^\S+@\S+\.\S+$/.test(email)) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'A valid email address is required'
+        );
+    }
+
+    if (!subject || typeof subject !== 'string' || subject.trim().length === 0) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Subject is required'
+        );
+    }
+
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'Message is required'
+        );
+    }
+
+    // Limit field lengths to prevent abuse
+    if (name.length > 200 || email.length > 200 || subject.length > 500 || message.length > 5000) {
+        throw new functions.https.HttpsError(
+            'invalid-argument',
+            'One or more fields exceed the maximum allowed length'
+        );
+    }
+
+    try {
+        const docRef = await admin.firestore().collection('contact_messages').add({
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            subject: subject.trim(),
+            message: message.trim(),
+            status: 'new',
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return {
+            success: true,
+            id: docRef.id,
+            message: 'Contact message submitted successfully'
+        };
+    } catch (error) {
+        console.error('Error submitting contact form:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            'Failed to submit contact message'
+        );
+    }
+});
+
+/**
+ * Submit a membership application
+ * Validates input and stores in Firestore with server timestamp
+ *
+ * Usage from frontend:
+ * const submitMembershipApplication = firebase.functions().httpsCallable('submitMembershipApplication');
+ * const result = await submitMembershipApplication({ firstName, lastName, email, ... });
+ */
+exports.submitMembershipApplication = functions.https.onCall(async (data) => {
+    const { firstName, lastName, email, phone, university, major, graduationYear, whyJoin, howHeard } = data;
+
+    // Validate required fields
+    if (!firstName || typeof firstName !== 'string' || firstName.trim().length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'First name is required');
+    }
+    if (!lastName || typeof lastName !== 'string' || lastName.trim().length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'Last name is required');
+    }
+    if (!email || typeof email !== 'string' || !/^\S+@\S+\.\S+$/.test(email)) {
+        throw new functions.https.HttpsError('invalid-argument', 'A valid email address is required');
+    }
+    if (!phone || typeof phone !== 'string' || phone.trim().length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'Phone number is required');
+    }
+    if (!university || typeof university !== 'string' || university.trim().length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'University is required');
+    }
+    if (!major || typeof major !== 'string' || major.trim().length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'Major/field of study is required');
+    }
+    if (!graduationYear || typeof graduationYear !== 'number') {
+        throw new functions.https.HttpsError('invalid-argument', 'Graduation year is required');
+    }
+    if (!whyJoin || typeof whyJoin !== 'string' || whyJoin.trim().length === 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'Please tell us why you want to join');
+    }
+
+    try {
+        // Check for duplicate applications by email
+        const existing = await admin.firestore()
+            .collection('membership_applications')
+            .where('email', '==', email.trim().toLowerCase())
+            .where('status', 'in', ['pending', 'approved'])
+            .limit(1)
+            .get();
+
+        if (!existing.empty) {
+            throw new functions.https.HttpsError(
+                'already-exists',
+                'A membership application with this email already exists'
+            );
+        }
+
+        const docRef = await admin.firestore().collection('membership_applications').add({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            university: university.trim(),
+            major: major.trim(),
+            graduationYear,
+            whyJoin: whyJoin.trim(),
+            howHeard: howHeard ? howHeard.trim() : null,
+            status: 'pending',
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        return {
+            success: true,
+            id: docRef.id,
+            message: 'Membership application submitted successfully'
+        };
+    } catch (error) {
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
+        console.error('Error submitting membership application:', error);
+        throw new functions.https.HttpsError(
+            'internal',
+            'Failed to submit membership application'
+        );
+    }
+});
+
 exports.refreshUserToken = functions.https.onRequest(async (req, res) => {
     // Enable CORS
     res.set('Access-Control-Allow-Origin', '*');
