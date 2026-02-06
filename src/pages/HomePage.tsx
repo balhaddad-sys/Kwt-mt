@@ -1,12 +1,34 @@
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, Calendar, Camera, Heart } from 'lucide-react';
+import { ArrowRight, Users, Calendar, Camera, Heart, Save, RotateCcw, Check, AlertCircle, LayoutGrid } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import Section, { SectionHeader } from '../components/ui/Section';
 import Button from '../components/ui/Button';
 import EventCard from '../components/common/EventCard';
-import { EditableText, EditableImage } from '../components/editable';
+import { EditableText, EditableImage, SectionEditWrapper } from '../components/editable';
 import { mockEvents, mockStatistics, mockAnnouncements } from '../data/mockData';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import { useEdit } from '../contexts/EditContext';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { useAuth } from '../contexts/AuthContext';
+import { SectionConfig, sectionsEqual } from '../utils/normalizeSections';
 
 // Hero Section Component
 function HeroSection() {
@@ -588,8 +610,152 @@ const sectionComponents: Record<string, React.FC> = {
   'gallery': GallerySection,
 };
 
+// Section labels for the editor
+const sectionLabels: Record<string, string> = {
+  'hero': 'Hero Banner',
+  'announcements': 'Announcements',
+  'stats': 'Statistics',
+  'about': 'About Section',
+  'featured-events': 'Featured Events',
+  'upcoming-events': 'Upcoming Events',
+  'why-join': 'Why Join Us',
+  'cta': 'Call to Action',
+  'gallery': 'Gallery Preview',
+};
+
 export default function HomePage() {
-  const { isSectionVisible, getSortedSections, loading } = useSiteSettings();
+  const { getSortedSections, loading } = useSiteSettings();
+  const { isEditMode } = useEdit();
+  const { currentUser } = useAuth();
+
+  // Local state for layout editing
+  const [remoteSections, setRemoteSections] = useState<SectionConfig[]>([]);
+  const [draftSections, setDraftSections] = useState<SectionConfig[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const dirtyRef = useRef(false);
+
+  // Sync remote sections from useSiteSettings
+  useEffect(() => {
+    if (!loading) {
+      const sections = getSortedSections();
+      setRemoteSections(sections);
+      if (!dirtyRef.current) {
+        setDraftSections(sections);
+      }
+    }
+  }, [getSortedSections, loading]);
+
+  // Check if layout has changes
+  const hasLayoutChanges = useMemo(
+    () => !sectionsEqual(draftSections, remoteSections),
+    [draftSections, remoteSections]
+  );
+
+  // Keep dirty ref in sync
+  useEffect(() => {
+    dirtyRef.current = hasLayoutChanges;
+  }, [hasLayoutChanges]);
+
+  // Reset dirty state when exiting edit mode
+  useEffect(() => {
+    if (!isEditMode && hasLayoutChanges) {
+      // Optionally prompt user about unsaved changes
+      setDraftSections(remoteSections);
+      dirtyRef.current = false;
+    }
+  }, [isEditMode]);
+
+  // Sorted draft sections for rendering
+  const sortedSections = useMemo(
+    () => [...draftSections].sort((a, b) => a.order - b.order),
+    [draftSections]
+  );
+
+  // Configure DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setDraftSections((items) => {
+        const sorted = [...items].sort((a, b) => a.order - b.order);
+        const oldIndex = sorted.findIndex((item) => item.id === active.id);
+        const newIndex = sorted.findIndex((item) => item.id === over.id);
+
+        const reordered = arrayMove(sorted, oldIndex, newIndex);
+        return reordered.map((item, index) => ({
+          ...item,
+          order: index,
+        }));
+      });
+      setSaveSuccess(false);
+      setSaveError(null);
+    }
+  };
+
+  // Toggle section visibility
+  const handleToggleVisibility = (sectionId: string) => {
+    setDraftSections((prev) =>
+      prev.map((section) =>
+        section.id === sectionId
+          ? { ...section, visible: !section.visible }
+          : section
+      )
+    );
+    setSaveSuccess(false);
+    setSaveError(null);
+  };
+
+  // Save layout changes
+  const handleSaveLayout = async () => {
+    if (!currentUser) return;
+
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      await setDoc(
+        doc(db, 'settings', 'site'),
+        {
+          sections: draftSections,
+          _lastUpdated: serverTimestamp(),
+          _updatedBy: currentUser.uid,
+        },
+        { merge: true }
+      );
+
+      setRemoteSections(draftSections);
+      dirtyRef.current = false;
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error saving layout:', err);
+      setSaveError('Failed to save layout');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Reset layout changes
+  const handleResetLayout = () => {
+    setDraftSections(remoteSections);
+    dirtyRef.current = false;
+    setSaveError(null);
+  };
 
   if (loading) {
     return (
@@ -599,22 +765,110 @@ export default function HomePage() {
     );
   }
 
-  const sortedSections = getSortedSections();
+  // Render sections based on edit mode
+  const renderSections = () => {
+    if (isEditMode) {
+      // In edit mode: show all sections (including hidden) with drag handles
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sortedSections.map((s) => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {sortedSections.map((section) => {
+              const SectionComponent = sectionComponents[section.id];
+              if (!SectionComponent) return null;
+
+              return (
+                <SectionEditWrapper
+                  key={section.id}
+                  id={section.id}
+                  label={sectionLabels[section.id] || section.label}
+                  visible={section.visible}
+                  isEditMode={isEditMode}
+                  onToggleVisibility={handleToggleVisibility}
+                >
+                  <SectionComponent />
+                </SectionEditWrapper>
+              );
+            })}
+          </SortableContext>
+        </DndContext>
+      );
+    }
+
+    // Normal mode: only show visible sections
+    return sortedSections.map((section) => {
+      if (!section.visible) return null;
+
+      const SectionComponent = sectionComponents[section.id];
+      if (!SectionComponent) return null;
+
+      return <SectionComponent key={section.id} />;
+    });
+  };
 
   return (
     <>
-      {sortedSections.map((section) => {
-        if (!isSectionVisible(section.id)) {
-          return null;
-        }
+      {renderSections()}
 
-        const SectionComponent = sectionComponents[section.id];
-        if (!SectionComponent) {
-          return null;
-        }
+      {/* Floating Layout Editor Toolbar */}
+      <AnimatePresence>
+        {isEditMode && hasLayoutChanges && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 pr-3 border-r border-neutral-200 dark:border-neutral-700">
+                <LayoutGrid className="w-5 h-5 text-primary-500" />
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Layout changed
+                </span>
+              </div>
 
-        return <SectionComponent key={section.id} />;
-      })}
+              {saveError && (
+                <div className="flex items-center gap-1 text-red-500 text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{saveError}</span>
+                </div>
+              )}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetLayout}
+                leftIcon={<RotateCcw className="w-4 h-4" />}
+                disabled={saving}
+              >
+                Reset
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSaveLayout}
+                leftIcon={
+                  saveSuccess ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )
+                }
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Layout'}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
